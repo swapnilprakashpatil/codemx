@@ -29,6 +29,32 @@ import {
 } from './coding-api';
 import { DatabaseService } from './database.service';
 
+/** ICD-10-CM chapter reference (matches backend api/services/icd10_chapters.py). */
+const ICD10_CHAPTERS: { id: number; name: string; range: string; start: string; end: string }[] = [
+  { id: 1,  name: 'Certain infectious and parasitic diseases',                    range: 'A00-B99', start: 'A00', end: 'B99' },
+  { id: 2,  name: 'Neoplasms',                                                 range: 'C00-D49', start: 'C00', end: 'D49' },
+  { id: 3,  name: 'Diseases of the blood and blood-forming organs',             range: 'D50-D89', start: 'D50', end: 'D89' },
+  { id: 4,  name: 'Endocrine, nutritional and metabolic diseases',           range: 'E00-E89', start: 'E00', end: 'E89' },
+  { id: 5,  name: 'Mental, behavioral and neurodevelopmental disorders',       range: 'F01-F99', start: 'F01', end: 'F99' },
+  { id: 6,  name: 'Diseases of the nervous system',                           range: 'G00-G99', start: 'G00', end: 'G99' },
+  { id: 7,  name: 'Diseases of the eye and adnexa',                            range: 'H00-H59', start: 'H00', end: 'H59' },
+  { id: 8,  name: 'Diseases of the ear and mastoid process',                   range: 'H60-H95', start: 'H60', end: 'H95' },
+  { id: 9,  name: 'Diseases of the circulatory system',                       range: 'I00-I99', start: 'I00', end: 'I99' },
+  { id: 10, name: 'Diseases of the respiratory system',                        range: 'J00-J99', start: 'J00', end: 'J99' },
+  { id: 11, name: 'Diseases of the digestive system',                          range: 'K00-K95', start: 'K00', end: 'K95' },
+  { id: 12, name: 'Diseases of the skin and subcutaneous tissue',               range: 'L00-L99', start: 'L00', end: 'L99' },
+  { id: 13, name: 'Diseases of the musculoskeletal system and connective tissue', range: 'M00-M99', start: 'M00', end: 'M99' },
+  { id: 14, name: 'Diseases of the genitourinary system',                       range: 'N00-N99', start: 'N00', end: 'N99' },
+  { id: 15, name: 'Pregnancy, childbirth and the puerperium',                  range: 'O00-O9A', start: 'O00', end: 'O9A' },
+  { id: 16, name: 'Certain conditions originating in the perinatal period',    range: 'P00-P96', start: 'P00', end: 'P96' },
+  { id: 17, name: 'Congenital malformations, deformations and chromosomal abnormalities', range: 'Q00-Q99', start: 'Q00', end: 'Q99' },
+  { id: 18, name: 'Symptoms, signs and abnormal clinical and laboratory findings, not elsewhere classified', range: 'R00-R99', start: 'R00', end: 'R99' },
+  { id: 19, name: 'Injury, poisoning and certain other consequences of external causes', range: 'S00-T88', start: 'S00', end: 'T88' },
+  { id: 20, name: 'External causes of morbidity',                              range: 'V00-Y99', start: 'V00', end: 'Y99' },
+  { id: 21, name: 'Factors influencing health status and contact with health services', range: 'Z00-Z99', start: 'Z00', end: 'Z99' },
+  { id: 22, name: 'Codes for special purposes',                                range: 'U00-U85', start: 'U00', end: 'U85' },
+];
+
 @Injectable() 
 export class CodingApiSqlJs extends CodingApi {
   private db = inject(DatabaseService);
@@ -68,9 +94,9 @@ export class CodingApiSqlJs extends CodingApi {
         { table: 'snomed_codes', codeCol: 'code', descCol: 'description', type: 'SNOMED' },
         { table: 'icd10_codes', codeCol: 'code', descCol: 'description', type: 'ICD-10-CM' },
         { table: 'hcc_codes', codeCol: 'code', descCol: 'description', type: 'HCC' },
-        { table: 'cpt_codes', codeCol: 'code', descCol: 'description', type: 'CPT' },
-        { table: 'hcpcs_codes', codeCol: 'code', descCol: 'description', type: 'HCPCS' },
-        { table: 'rxnorm_codes', codeCol: 'code', descCol: 'description', type: 'RxNorm' },
+        { table: 'cpt_codes', codeCol: 'code', descCol: 'long_description', type: 'CPT' },
+        { table: 'hcpcs_codes', codeCol: 'code', descCol: 'long_description', type: 'HCPCS' },
+        { table: 'rxnorm_codes', codeCol: 'code', descCol: 'name', type: 'RxNorm' },
         { table: 'ndc_codes', codeCol: 'code', descCol: 'product_name', type: 'NDC' },
       ];
     } else {
@@ -79,9 +105,9 @@ export class CodingApiSqlJs extends CodingApi {
         'icd-10': { table: 'icd10_codes', codeCol: 'code', descCol: 'description', type: 'ICD-10-CM' },
         icd10: { table: 'icd10_codes', codeCol: 'code', descCol: 'description', type: 'ICD-10-CM' },
         hcc: { table: 'hcc_codes', codeCol: 'code', descCol: 'description', type: 'HCC' },
-        cpt: { table: 'cpt_codes', codeCol: 'code', descCol: 'description', type: 'CPT' },
-        hcpcs: { table: 'hcpcs_codes', codeCol: 'code', descCol: 'description', type: 'HCPCS' },
-        rxnorm: { table: 'rxnorm_codes', codeCol: 'code', descCol: 'description', type: 'RxNorm' },
+        cpt: { table: 'cpt_codes', codeCol: 'code', descCol: 'long_description', type: 'CPT' },
+        hcpcs: { table: 'hcpcs_codes', codeCol: 'code', descCol: 'long_description', type: 'HCPCS' },
+        rxnorm: { table: 'rxnorm_codes', codeCol: 'code', descCol: 'name', type: 'RxNorm' },
         ndc: { table: 'ndc_codes', codeCol: 'code', descCol: 'product_name', type: 'NDC' },
       };
       tables = typeMap[type] ? [typeMap[type]] : [];
@@ -131,9 +157,9 @@ export class CodingApiSqlJs extends CodingApi {
         { table: 'snomed_codes', codeCol: 'code', descCol: 'description', type: 'SNOMED' },
         { table: 'icd10_codes', codeCol: 'code', descCol: 'description', type: 'ICD-10-CM' },
         { table: 'hcc_codes', codeCol: 'code', descCol: 'description', type: 'HCC' },
-        { table: 'cpt_codes', codeCol: 'code', descCol: 'description', type: 'CPT' },
-        { table: 'hcpcs_codes', codeCol: 'code', descCol: 'description', type: 'HCPCS' },
-        { table: 'rxnorm_codes', codeCol: 'code', descCol: 'description', type: 'RxNorm' },
+        { table: 'cpt_codes', codeCol: 'code', descCol: 'long_description', type: 'CPT' },
+        { table: 'hcpcs_codes', codeCol: 'code', descCol: 'long_description', type: 'HCPCS' },
+        { table: 'rxnorm_codes', codeCol: 'code', descCol: 'name', type: 'RxNorm' },
         { table: 'ndc_codes', codeCol: 'code', descCol: 'product_name', type: 'NDC' },
       ];
     } else {
@@ -142,29 +168,28 @@ export class CodingApiSqlJs extends CodingApi {
         'icd-10': { table: 'icd10_codes', codeCol: 'code', descCol: 'description', type: 'ICD-10-CM' },
         icd10: { table: 'icd10_codes', codeCol: 'code', descCol: 'description', type: 'ICD-10-CM' },
         hcc: { table: 'hcc_codes', codeCol: 'code', descCol: 'description', type: 'HCC' },
-        cpt: { table: 'cpt_codes', codeCol: 'code', descCol: 'description', type: 'CPT' },
-        hcpcs: { table: 'hcpcs_codes', codeCol: 'code', descCol: 'description', type: 'HCPCS' },
-        rxnorm: { table: 'rxnorm_codes', codeCol: 'code', descCol: 'description', type: 'RxNorm' },
+        cpt: { table: 'cpt_codes', codeCol: 'code', descCol: 'long_description', type: 'CPT' },
+        hcpcs: { table: 'hcpcs_codes', codeCol: 'code', descCol: 'long_description', type: 'HCPCS' },
+        rxnorm: { table: 'rxnorm_codes', codeCol: 'code', descCol: 'name', type: 'RxNorm' },
         ndc: { table: 'ndc_codes', codeCol: 'code', descCol: 'product_name', type: 'NDC' },
       };
       tables = typeMap[type] ? [typeMap[type]] : [];
     }
 
     if (tables.length === 0) return [];
-    const perTable = Math.ceil(limit / tables.length);
     const queries = tables.map(
       ({ table, codeCol, descCol, type }) => `
         SELECT ${codeCol} as code, ${descCol} as description, '${type}' as code_type
         FROM ${table}
         WHERE active = 1 AND (LOWER(${codeCol}) LIKE ? OR LOWER(${descCol}) LIKE ?)
-        LIMIT ${Number(perTable)}
       `
     );
 
     const unionQuery = queries.join(' UNION ALL ');
+    const dataQuery = `SELECT * FROM (${unionQuery}) LIMIT ${Number(limit)}`;
     const params = tables.flatMap(() => [searchTerm, searchTerm]);
 
-    return this.db.queryAsObjects<AutocompleteItem>(unionQuery, params) || [];
+    return this.db.queryAsObjects<AutocompleteItem>(dataQuery, params) || [];
   }
 
   // ─── SNOMED ──────────────────────────────────────────────────────────────────
@@ -233,8 +258,7 @@ export class CodingApiSqlJs extends CodingApi {
 
   private async _getIcd10Code(code: string): Promise<CodeItem> {
     const sql = `
-      SELECT code, description, short_description, long_description, 
-             category, chapter, is_header, active
+      SELECT code, description, short_description, category, chapter, is_header, active
       FROM icd10_codes
       WHERE code = ?
     `;
@@ -268,9 +292,67 @@ export class CodingApiSqlJs extends CodingApi {
   }
 
   override getIcd10Hierarchy(letter?: string, q?: string): Observable<ICD10HierarchyResponse> {
-    // This is a complex query - for now return empty structure
-    // TODO: Implement full ICD-10 hierarchy loading
-    return of({ chapters: [] });
+    return from(this._getIcd10Hierarchy(letter ?? '', q ?? ''));
+  }
+
+  private async _getIcd10Hierarchy(letter: string, q: string): Promise<ICD10HierarchyResponse> {
+    if (!this.db.isReady()) await this.db.initialize();
+
+    let chapters = ICD10_CHAPTERS;
+    if (letter) {
+      const L = letter.toUpperCase();
+      chapters = chapters.filter((ch) => ch.start[0] <= L && L <= ch.end[0]);
+    }
+
+    const resultChapters: { id: number; name: string; range: string; category_count: number; categories: { code: string; description: string; child_count: number }[] }[] = [];
+
+    for (const ch of chapters) {
+      let catSql = `
+        SELECT code, description FROM icd10_codes
+        WHERE active = 1 AND LENGTH(code) = 3 AND code >= ? AND code <= ?
+      `;
+      const catParams: any[] = [ch.start, ch.end];
+      if (letter) {
+        catSql += ` AND code LIKE ?`;
+        catParams.push(`${letter.toUpperCase()}%`);
+      }
+      if (q) {
+        catSql += ` AND (code LIKE ? OR LOWER(description) LIKE ?)`;
+        const term = `%${q.toLowerCase()}%`;
+        catParams.push(term, term);
+      }
+      catSql += ` ORDER BY code`;
+
+      const categories = await this.db.queryAsObjects<{ code: string; description: string }>(catSql, catParams);
+      if (categories.length === 0) continue;
+
+      const catCodes = categories.map((c) => c.code);
+      const placeholders = catCodes.map(() => '?').join(',');
+      const countSql = `
+        SELECT category, COUNT(*) as cnt FROM icd10_codes
+        WHERE active = 1 AND LENGTH(code) > 3 AND category IN (${placeholders})
+        GROUP BY category
+      `;
+      const countRows = await this.db.queryAsObjects<{ category: string; cnt: number }>(countSql, catCodes);
+      const childCountMap: Record<string, number> = {};
+      for (const row of countRows) {
+        childCountMap[row.category] = typeof row.cnt === 'number' ? row.cnt : parseInt(String(row.cnt), 10) || 0;
+      }
+
+      resultChapters.push({
+        id: ch.id,
+        name: ch.name,
+        range: ch.range,
+        category_count: categories.length,
+        categories: categories.map((c) => ({
+          code: c.code,
+          description: c.description ?? '',
+          child_count: childCountMap[c.code] ?? 0,
+        })),
+      });
+    }
+
+    return { chapters: resultChapters };
   }
 
   override getIcd10CategoryChildren(code: string): Observable<ICD10CategoryChildren> {
@@ -309,7 +391,7 @@ export class CodingApiSqlJs extends CodingApi {
 
   private async _getHccCode(code: string): Promise<CodeItem> {
     const sql = `
-      SELECT code, description, coefficient, dhs_category, model_version, payment_year, active
+      SELECT code, description, coefficient, category, model_version, payment_year, active
       FROM hcc_codes
       WHERE code = ?
     `;
@@ -349,7 +431,7 @@ export class CodingApiSqlJs extends CodingApi {
     perPage: number = 25,
     q?: string
   ): Observable<PaginatedResponse> {
-    return from(this._getCodeList('cpt_codes', 'description', 'CPT', page, perPage, q));
+    return from(this._getCodeList('cpt_codes', 'long_description', 'CPT', page, perPage, q));
   }
 
   override getCptCode(code: string): Observable<CodeItem> {
@@ -358,7 +440,7 @@ export class CodingApiSqlJs extends CodingApi {
 
   private async _getCptCode(code: string): Promise<CodeItem> {
     const sql = `
-      SELECT code, description, category, active
+      SELECT code, long_description as description, short_description, category, dhs_category, status, active
       FROM cpt_codes
       WHERE code = ?
     `;
@@ -379,7 +461,7 @@ export class CodingApiSqlJs extends CodingApi {
     perPage: number = 25,
     q?: string
   ): Observable<PaginatedResponse> {
-    return from(this._getCodeList('hcpcs_codes', 'description', 'HCPCS', page, perPage, q));
+    return from(this._getCodeList('hcpcs_codes', 'long_description', 'HCPCS', page, perPage, q));
   }
 
   override getHcpcsCode(code: string): Observable<CodeItem> {
@@ -388,7 +470,7 @@ export class CodingApiSqlJs extends CodingApi {
 
   private async _getHcpcsCode(code: string): Promise<CodeItem> {
     const sql = `
-      SELECT code, description, category, status, active
+      SELECT code, long_description as description, short_description, category, dhs_category, status, active
       FROM hcpcs_codes
       WHERE code = ?
     `;
@@ -409,7 +491,7 @@ export class CodingApiSqlJs extends CodingApi {
     perPage: number = 25,
     q?: string
   ): Observable<PaginatedResponse> {
-    return from(this._getCodeList('rxnorm_codes', 'description', 'RxNorm', page, perPage, q));
+    return from(this._getCodeList('rxnorm_codes', 'name', 'RxNorm', page, perPage, q));
   }
 
   override getRxNormCode(code: string): Observable<CodeItem> {
@@ -418,7 +500,7 @@ export class CodingApiSqlJs extends CodingApi {
 
   private async _getRxNormCode(code: string): Promise<CodeItem> {
     const sql = `
-      SELECT code, description, term_type, active
+      SELECT code, name as description, term_type, suppress, active
       FROM rxnorm_codes
       WHERE code = ?
     `;

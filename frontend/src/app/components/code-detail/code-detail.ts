@@ -67,7 +67,8 @@ export class CodeDetail implements OnInit {
       snomed: (c) => this.api.getSnomedCode(c),
       icd10: (c) => this.api.getIcd10Code(c),
       'icd-10-cm': (c) => this.api.getIcd10Code(c),
-      'icd10cm': (c) => this.api.getIcd10Code(c),
+      'icd10-cm': (c) => this.api.getIcd10Code(c),
+      icd10cm: (c) => this.api.getIcd10Code(c),
       hcc: (c) => this.api.getHccCode(c),
       cpt: (c) => this.api.getCptCode(c),
       hcpcs: (c) => this.api.getHcpcsCode(c),
@@ -80,7 +81,7 @@ export class CodeDetail implements OnInit {
         next: (item: CodeItem) => {
           this.codeItem = item;
           this.loading = false;
-          if (this.codeType === 'icd10' || this.codeType === 'icd-10-cm' || this.codeType === 'icd10cm') {
+          if (this.codeType === 'icd10' || this.codeType === 'icd-10-cm' || this.codeType === 'icd10-cm' || this.codeType === 'icd10cm') {
             this.icd10IframeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
               this.buildIcd10DataUrl(item.code)
             );
