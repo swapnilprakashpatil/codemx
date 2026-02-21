@@ -250,6 +250,19 @@ export class Search implements OnInit, OnDestroy {
     return types.sort((a, b) => order.indexOf(a) - order.indexOf(b));
   }
 
+  /** Total counts by type for the mapping graph (for display in header). */
+  getGraphCountSummary(): string {
+    if (!this.graphNodes.length) return '';
+    const order = ['SNOMED', 'RxNorm', 'NDC', 'ICD-10-CM', 'HCC', 'CPT', 'HCPCS'];
+    const byType: Record<string, number> = {};
+    for (const n of this.graphNodes) {
+      byType[n.type] = (byType[n.type] ?? 0) + 1;
+    }
+    const parts = order.filter(t => (byType[t] ?? 0) > 0).map(t => `${byType[t]} ${t}`);
+    const totalEdges = this.graphEdges.length;
+    return parts.join(' · ') + (totalEdges > 0 ? ` · ${totalEdges} linkages` : '');
+  }
+
   isRootNode(node: GraphNode): boolean {
     return node.id === this.graphRoot;
   }

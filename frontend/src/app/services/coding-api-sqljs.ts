@@ -689,29 +689,213 @@ export class CodingApiSqlJs extends CodingApi {
   private async _getMappingGraph(code: string): Promise<MappingGraphResponse> {
     const nodes: GraphNode[] = [];
     const edges: GraphEdge[] = [];
+    const seenIds = new Set<string>();
 
-    // Detect code type and build graph
-    // This is a simplified implementation
+    const addNode = (id: string, type: string, label: string, category: string) => {
+      if (seenIds.has(id)) return;
+      seenIds.add(id);
+      nodes.push({ id, code: id, label: label || id, type, category });
+    };
+
+    // SNOMED root
     const snomedExists = await this.db.queryOne('SELECT 1 FROM snomed_codes WHERE code = ?', [code]);
-
     if (snomedExists) {
-      nodes.push({ id: code, code, label: code, type: 'SNOMED', category: 'root' });
+      addNode(code, 'SNOMED', code, 'root');
 
       const icd10s = await this.db.queryAsObjects(
-        'SELECT icd10_code as code FROM snomed_icd10_mapping WHERE snomed_code = ?',
+        'SELECT icd10_code as code FROM snomed_icd10_mapping WHERE snomed_code = ? AND active = 1',
         [code]
       );
+      for (const row of icd10s) {
+        const c = (row as any).code;
+        if (c) {
+          addNode(c, 'ICD-10-CM', c, 'mapped');
+          edges.push({ source: code, target: c, relationship: 'maps_to' });
+          // Transitive: ICD-10 -> HCC (match Flask)
+          const hccFromIcd = await this.db.queryAsObjects(
+            'SELECT h.code, h.description FROM icd10_hcc_mapping m JOIN hcc_codes h ON m.hcc_code = h.code WHERE m.icd10_code = ? AND m.active = 1 LIMIT 15',
+            [c]
+          );
+          for (const h of hccFromIcd) {
+            const hc = (h as any).code;
+            if (hc) {
+              addNode(hc, 'HCC', (h as any).description || hc, 'mapped');
+              edges.push({ source: c, target: hc, relationship: 'risk_adjusts_to' });
+            }
+          }
+        }
+      }
 
-      for (const icd10 of icd10s) {
-        const icd10Code = (icd10 as any).code;
-        nodes.push({ id: icd10Code, code: icd10Code, label: icd10Code, type: 'ICD-10-CM', category: 'mapped' });
-        edges.push({ source: code, target: icd10Code, relationship: 'maps-to' });
+      const rxnormRows = await this.db.queryAsObjects(
+        'SELECT r.code, r.name as description FROM rxnorm_snomed_mapping m JOIN rxnorm_codes r ON m.rxnorm_code = r.code WHERE m.snomed_code = ? AND m.active = 1',
+        [code]
+      );
+      const primaryRxNormCodes: string[] = [];
+      for (const row of rxnormRows) {
+        const c = (row as any).code;
+        if (c) {
+          primaryRxNormCodes.push(c);
+          const label = (row as any).description || c;
+          addNode(c, 'RxNorm', label, 'mapped');
+          edges.push({ source: code, target: c, relationship: 'cross_reference' });
+          // Transitive: RxNorm -> NDC for this primary RxNorm (no limit so canvas shows all)
+          const ndcFromRx = await this.db.queryAsObjects(
+            'SELECT n.code, n.product_name as description FROM ndc_rxnorm_mapping m JOIN ndc_codes n ON m.ndc_code = n.code WHERE m.rxnorm_code = ?',
+            [c]
+          );
+          for (const nd of ndcFromRx) {
+            const nc = (nd as any).code;
+            if (nc) {
+              addNode(nc, 'NDC', (nd as any).description || nc, 'mapped');
+              edges.push({ source: c, target: nc, relationship: 'standardized_as' });
+            }
+          }
+        }
+      }
+      // Expand: all related RxNorm (forms, strengths, brands) via rxnorm_relationships
+      for (const rxcui of primaryRxNormCodes) {
+        const relatedOut = await this.db.queryAsObjects<{ code: string }>(
+          'SELECT rxcui_target as code FROM rxnorm_relationships WHERE rxcui_source = ?',
+          [rxcui]
+        );
+        const relatedIn = await this.db.queryAsObjects<{ code: string }>(
+          'SELECT rxcui_source as code FROM rxnorm_relationships WHERE rxcui_target = ?',
+          [rxcui]
+        );
+        const relatedCodes = new Set<string>();
+        for (const r of relatedOut) if (r?.code) relatedCodes.add(r.code);
+        for (const r of relatedIn) if (r?.code) relatedCodes.add(r.code);
+        for (const relCode of relatedCodes) {
+          const labelRow = await this.db.queryOne<{ name: string }>('SELECT name FROM rxnorm_codes WHERE code = ?', [relCode]);
+          const label = labelRow?.name || relCode;
+          addNode(relCode, 'RxNorm', label, 'mapped');
+          edges.push({ source: rxcui, target: relCode, relationship: 'cross_reference' });
+          const ndcFromRel = await this.db.queryAsObjects(
+            'SELECT n.code, n.product_name as description FROM ndc_rxnorm_mapping m JOIN ndc_codes n ON m.ndc_code = n.code WHERE m.rxnorm_code = ?',
+            [relCode]
+          );
+          for (const nd of ndcFromRel) {
+            const nc = (nd as any).code;
+            if (nc) {
+              addNode(nc, 'NDC', (nd as any).description || nc, 'mapped');
+              edges.push({ source: relCode, target: nc, relationship: 'standardized_as' });
+            }
+          }
+        }
+      }
+
+      const hccRows = await this.db.queryAsObjects(
+        'SELECT h.code, h.description FROM snomed_hcc_mapping m JOIN hcc_codes h ON m.hcc_code = h.code WHERE m.snomed_code = ? AND m.active = 1',
+        [code]
+      );
+      for (const row of hccRows) {
+        const c = (row as any).code;
+        if (c) {
+          addNode(c, 'HCC', (row as any).description || c, 'mapped');
+          edges.push({ source: code, target: c, relationship: 'risk_adjusts_to' });
+        }
       }
 
       return { root: code, nodes, edges };
     }
 
-    // If code not found, return minimal structure
+    // RxNorm root
+    const rxnormExists = await this.db.queryOne('SELECT 1 FROM rxnorm_codes WHERE code = ?', [code]);
+    if (rxnormExists) {
+      addNode(code, 'RxNorm', code, 'root');
+
+      const snomedRows = await this.db.queryAsObjects(
+        'SELECT s.code, s.description FROM rxnorm_snomed_mapping m JOIN snomed_codes s ON m.snomed_code = s.code WHERE m.rxnorm_code = ? AND m.active = 1',
+        [code]
+      );
+      for (const row of snomedRows) {
+        const c = (row as any).code;
+        if (c) {
+          addNode(c, 'SNOMED', (row as any).description || c, 'mapped');
+          edges.push({ source: code, target: c, relationship: 'cross_reference' });
+        }
+      }
+
+      const ndcRows = await this.db.queryAsObjects(
+        'SELECT n.code, n.product_name as description FROM ndc_rxnorm_mapping m JOIN ndc_codes n ON m.ndc_code = n.code WHERE m.rxnorm_code = ?',
+        [code]
+      );
+      for (const row of ndcRows) {
+        const c = (row as any).code;
+        if (c) {
+          addNode(c, 'NDC', (row as any).description || c, 'mapped');
+          edges.push({ source: code, target: c, relationship: 'standardized_as' });
+        }
+      }
+
+      return { root: code, nodes, edges };
+    }
+
+    // NDC root
+    const ndcExists = await this.db.queryOne('SELECT 1 FROM ndc_codes WHERE code = ?', [code]);
+    if (ndcExists) {
+      addNode(code, 'NDC', code, 'root');
+      const rxnormRows = await this.db.queryAsObjects(
+        'SELECT r.code, r.name as description FROM ndc_rxnorm_mapping m JOIN rxnorm_codes r ON m.rxnorm_code = r.code WHERE m.ndc_code = ?',
+        [code]
+      );
+      for (const row of rxnormRows) {
+        const c = (row as any).code;
+        if (c) {
+          addNode(c, 'RxNorm', (row as any).description || c, 'mapped');
+          edges.push({ source: code, target: c, relationship: 'standardized_as' });
+        }
+      }
+      return { root: code, nodes, edges };
+    }
+
+    // ICD-10 root
+    const icd10Exists = await this.db.queryOne('SELECT 1 FROM icd10_codes WHERE code = ?', [code]);
+    if (icd10Exists) {
+      addNode(code, 'ICD-10-CM', code, 'root');
+      const snomedRows = await this.db.queryAsObjects(
+        'SELECT s.code, s.description FROM snomed_icd10_mapping m JOIN snomed_codes s ON m.snomed_code = s.code WHERE m.icd10_code = ? AND m.active = 1',
+        [code]
+      );
+      for (const row of snomedRows) {
+        const c = (row as any).code;
+        if (c) {
+          addNode(c, 'SNOMED', (row as any).description || c, 'mapped');
+          edges.push({ source: code, target: c, relationship: 'maps_to' });
+        }
+      }
+      const hccRows = await this.db.queryAsObjects(
+        'SELECT h.code, h.description FROM icd10_hcc_mapping m JOIN hcc_codes h ON m.hcc_code = h.code WHERE m.icd10_code = ? AND m.active = 1',
+        [code]
+      );
+      for (const row of hccRows) {
+        const c = (row as any).code;
+        if (c) {
+          addNode(c, 'HCC', (row as any).description || c, 'mapped');
+          edges.push({ source: code, target: c, relationship: 'risk_adjusts_to' });
+        }
+      }
+      return { root: code, nodes, edges };
+    }
+
+    // HCC root
+    const hccExists = await this.db.queryOne('SELECT 1 FROM hcc_codes WHERE code = ?', [code]);
+    if (hccExists) {
+      addNode(code, 'HCC', code, 'root');
+      const icd10Rows = await this.db.queryAsObjects(
+        'SELECT i.code, i.description FROM icd10_hcc_mapping m JOIN icd10_codes i ON m.icd10_code = i.code WHERE m.hcc_code = ? AND m.active = 1',
+        [code]
+      );
+      for (const row of icd10Rows) {
+        const c = (row as any).code;
+        if (c) {
+          addNode(c, 'ICD-10-CM', (row as any).description || c, 'mapped');
+          edges.push({ source: code, target: c, relationship: 'risk_adjusts_to' });
+        }
+      }
+      return { root: code, nodes, edges };
+    }
+
     return { root: code, nodes: [], edges: [] };
   }
 
@@ -726,26 +910,60 @@ export class CodingApiSqlJs extends CodingApi {
 
     for (const code of codes) {
       try {
-        // Try each code type
+        let found = false;
         const snomed = await this.db.queryOne('SELECT * FROM snomed_codes WHERE code = ?', [code]);
         if (snomed) {
-          items.push({ ...snomed, code_type: 'SNOMED' } as CodeItem);
-          continue;
+          items.push({ ...snomed, code_type: 'SNOMED', description: snomed.description } as CodeItem);
+          found = true;
         }
-
-        const icd10 = await this.db.queryOne('SELECT * FROM icd10_codes WHERE code = ?', [code]);
-        if (icd10) {
-          items.push({ ...icd10, code_type: 'ICD-10-CM' } as CodeItem);
-          continue;
+        if (!found) {
+          const icd10 = await this.db.queryOne('SELECT * FROM icd10_codes WHERE code = ?', [code]);
+          if (icd10) {
+            items.push({ ...icd10, code_type: 'ICD-10-CM', description: icd10.description } as CodeItem);
+            found = true;
+          }
         }
-
-        const hcc = await this.db.queryOne('SELECT * FROM hcc_codes WHERE code = ?', [code]);
-        if (hcc) {
-          items.push({ ...hcc, code_type: 'HCC' } as CodeItem);
-          continue;
+        if (!found) {
+          const hcc = await this.db.queryOne('SELECT * FROM hcc_codes WHERE code = ?', [code]);
+          if (hcc) {
+            items.push({ ...hcc, code_type: 'HCC', description: hcc.description } as CodeItem);
+            found = true;
+          }
+        }
+        if (!found) {
+          const cpt = await this.db.queryOne('SELECT code, long_description as description, short_description, category, dhs_category, status, active FROM cpt_codes WHERE code = ?', [code]);
+          if (cpt) {
+            items.push({ ...cpt, code_type: 'CPT' } as CodeItem);
+            found = true;
+          }
+        }
+        if (!found) {
+          const hcpcs = await this.db.queryOne('SELECT code, long_description as description, short_description, category, dhs_category, status, active FROM hcpcs_codes WHERE code = ?', [code]);
+          if (hcpcs) {
+            items.push({ ...hcpcs, code_type: 'HCPCS' } as CodeItem);
+            found = true;
+          }
+        }
+        if (!found) {
+          const rxnorm = await this.db.queryOne('SELECT code, name as description, term_type, suppress, active FROM rxnorm_codes WHERE code = ?', [code]);
+          if (rxnorm) {
+            items.push({ ...rxnorm, code_type: 'RxNorm' } as CodeItem);
+            found = true;
+          }
+        }
+        if (!found) {
+          const ndc = await this.db.queryOne('SELECT code, product_name as description FROM ndc_codes WHERE code = ?', [code]);
+          if (ndc) {
+            items.push({ ...ndc, code_type: 'NDC' } as CodeItem);
+            found = true;
+          }
+        }
+        if (!found) {
+          items.push({ code, description: '', code_type: '', error: 'Code not found in any coding set' } as CodeItem);
         }
       } catch (err) {
         console.error(`Error fetching code ${code}:`, err);
+        items.push({ code, description: '', code_type: '', error: String(err) } as CodeItem);
       }
     }
 
@@ -759,11 +977,24 @@ export class CodingApiSqlJs extends CodingApi {
   }
 
   override getResources(): Observable<ResourcesResponse> {
-    // Static resources - return empty for now
+    // Match Flask CodingService.get_resources() static data
     return of({
-      guidelines: [],
-      training: [],
-      updates: [],
+      guidelines: [
+        { title: 'ICD-10-CM Official Guidelines for Coding and Reporting', url: 'https://www.cms.gov/medicare/coding-billing/icd-10-codes/icd-10-cm-official-guidelines-coding-and-reporting', category: 'ICD-10-CM', description: 'Official coding guidelines from CMS for ICD-10-CM coding.' },
+        { title: 'CMS HCC Risk Adjustment Model', url: 'https://www.cms.gov/medicare/health-plans/medicareadvtgspecratestats/risk-adjustors', category: 'HCC', description: 'CMS risk adjustment model documentation and updates.' },
+        { title: 'SNOMED CT Browser', url: 'https://browser.ihtsdotools.org/', category: 'SNOMED', description: 'Official SNOMED CT browser for searching and browsing concepts.' },
+        { title: 'AMA CPT Code Lookup', url: 'https://www.ama-assn.org/practice-management/cpt', category: 'CPT', description: 'American Medical Association CPT code resources.' },
+        { title: 'CMS HCPCS Coding Questions', url: 'https://www.cms.gov/medicare/coding-billing/healthcare-common-procedure-system', category: 'HCPCS', description: 'CMS resources for HCPCS Level II coding.' },
+      ],
+      training: [
+        { title: 'CMS MLN (Medicare Learning Network)', url: 'https://www.cms.gov/outreach-and-education/medicare-learning-network-mln/mlngeninfo', description: 'Free educational materials for healthcare professionals.' },
+        { title: 'AHIMA Coding Education', url: 'https://www.ahima.org/', description: 'American Health Information Management Association training.' },
+        { title: 'AAPC Coding Resources', url: 'https://www.aapc.com/', description: 'American Academy of Professional Coders resources.' },
+      ],
+      updates: [
+        { title: 'ICD-10-CM Updates (FY2026)', description: 'Annual ICD-10-CM code updates effective October 1, 2025.', effective_date: '2025-10-01' },
+        { title: 'HCC Model V28 Phase-In', description: 'CMS HCC risk adjustment model V28 phase-in continues.', effective_date: '2026-01-01' },
+      ],
     });
   }
 

@@ -117,6 +117,9 @@
         <div class="graph-header">
           <h2>Code Mapping &amp; Linkages</h2>
           <span class="graph-subtitle">for {{ selectedGraphCode }}</span>
+          @if (!graphLoading && getGraphCountSummary()) {
+            <span class="graph-counts">{{ getGraphCountSummary() }}</span>
+          }
         </div>
 
         @if (graphLoading) {

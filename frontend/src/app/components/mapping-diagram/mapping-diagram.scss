@@ -90,11 +90,13 @@
 .col-line[data-type="HCPCS"]     { stroke: var(--hcpcs); }
 
 /* ── edges ── */
-.edge-path[data-rel="maps_to"]          { stroke: var(--icd10); }
+.edge-path[data-rel="maps_to"],
+.edge-path[data-rel="maps-to"]          { stroke: var(--icd10); }
 .edge-path[data-rel="risk_adjusts_to"]  { stroke: var(--hcc); }
 .edge-path[data-rel="cross_reference"]  { stroke: var(--rxnorm); }
 .edge-path[data-rel="standardized_as"]  { stroke: var(--ndc); }
-.edge-glow[data-rel="maps_to"]          { stroke: var(--icd10); }
+.edge-glow[data-rel="maps_to"],
+.edge-glow[data-rel="maps-to"]          { stroke: var(--icd10); }
 .edge-glow[data-rel="risk_adjusts_to"]  { stroke: var(--hcc); }
 .edge-glow[data-rel="cross_reference"]  { stroke: var(--rxnorm); }
 .edge-glow[data-rel="standardized_as"]  { stroke: var(--ndc); }
