@@ -6,7 +6,7 @@ export const environment = {
   production: false,
   apiMode: 'api' as 'api' | 'static' | 'sqljs',
   apiUrl: 'http://localhost:5000/api',
-  staticDataPath: '/data',
+  staticDataPath: 'data',
   useSqlJs: false,
-  sqlJsDatabaseUrl: '/data/coding_database.sqlite.gz',
+  sqlJsDatabaseUrl: 'data/coding_database.sqlite.gz',
 };
