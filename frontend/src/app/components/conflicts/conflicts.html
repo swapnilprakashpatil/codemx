@@ -1,0 +1,271 @@
+<div class="conflicts-page">
+  <h1>Mapping Conflicts</h1>
+  <p class="subtitle">Records that could not be automatically mapped during pipeline processing</p>
+
+  <!-- Stats Cards -->
+  @if (stats) {
+    <div class="stats-row">
+      <div class="stat-card stat-total">
+        <span class="stat-value">{{ stats.total | number }}</span>
+        <span class="stat-label">Total Conflicts</span>
+      </div>
+      <div class="stat-card stat-open">
+        <span class="stat-value">{{ stats.open | number }}</span>
+        <span class="stat-label">Open</span>
+      </div>
+      <div class="stat-card stat-resolved">
+        <span class="stat-value">{{ stats.resolved | number }}</span>
+        <span class="stat-label">Resolved</span>
+      </div>
+      <div class="stat-card stat-ignored">
+        <span class="stat-value">{{ stats.ignored | number }}</span>
+        <span class="stat-label">Ignored</span>
+      </div>
+    </div>
+  }
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label>Status</label>
+      <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+        <option value="">All</option>
+        <option value="open">Open</option>
+        <option value="resolved">Resolved</option>
+        <option value="ignored">Ignored</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Source System</label>
+      <select [(ngModel)]="sourceSystemFilter" (change)="applyFilters()">
+        <option value="">All</option>
+        <option value="snomed">SNOMED CT</option>
+        <option value="icd10">ICD-10-CM</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Target System</label>
+      <select [(ngModel)]="targetSystemFilter" (change)="applyFilters()">
+        <option value="">All</option>
+        <option value="icd10">ICD-10-CM</option>
+        <option value="hcc">HCC</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Reason</label>
+      <select [(ngModel)]="reasonFilter" (change)="applyFilters()">
+        <option value="">All</option>
+        <option value="source_not_found">Source Not Found</option>
+        <option value="target_not_found">Target Not Found</option>
+      </select>
+    </div>
+    <div class="filter-group filter-search">
+      <label>Search</label>
+      <div class="search-bar compact">
+        <input class="search-input" type="text" placeholder="Search codes..."
+               [(ngModel)]="searchQuery" (keyup.enter)="applyFilters()">
+        <button class="btn-search" (click)="applyFilters()">Go</button>
+      </div>
+    </div>
+    <button class="btn-clear" (click)="clearFilters()">Clear</button>
+  </div>
+
+  <!-- Bulk Actions -->
+  @if (selectedIds.size > 0) {
+    <div class="bulk-bar">
+      <span>{{ selectedIds.size }} selected</span>
+      <button class="btn-bulk btn-bulk-ignore" (click)="bulkIgnore()">Ignore Selected</button>
+      <button class="btn-bulk btn-bulk-reopen" (click)="bulkReopen()">Reopen Selected</button>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="loading">Loading conflicts...</div>
+  }
+
+  <!-- Table -->
+  @if (!loading && items.length > 0) {
+    <div class="results-info">
+      <span>Showing {{ items.length }} of {{ total | number }} conflicts</span>
+    </div>
+
+    <table class="conflicts-table">
+      <thead>
+        <tr>
+          <th class="col-select">
+            <input type="checkbox" [checked]="selectAll" (change)="toggleSelectAll()">
+          </th>
+          <th>Source</th>
+          <th>Target</th>
+          <th>Description</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items; track item.id) {
+          <tr [class.selected]="isSelected(item.id)">
+            <td class="col-select">
+              <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)">
+            </td>
+            <td>
+              <span class="system-pill pill-{{ item.source_system }}">
+                <svg class="pill-icon" [innerHTML]="systemIcon(item.source_system)" viewBox="0 0 24 24"></svg>
+                {{ systemLabel(item.source_system) }}
+              </span>
+              <span class="code-cell" [appTooltip]="item.source_code + ' – ' + (item.source_description || '')">{{ item.source_code }}</span>
+            </td>
+            <td>
+              <span class="system-pill pill-{{ item.target_system }}">
+                <svg class="pill-icon" [innerHTML]="systemIcon(item.target_system)" viewBox="0 0 24 24"></svg>
+                {{ systemLabel(item.target_system) }}
+              </span>
+              <span class="code-cell" [appTooltip]="item.target_code + ' – ' + (item.source_description || '')">{{ item.target_code }}</span>
+            </td>
+            <td class="desc-cell">
+              <span class="desc-text" (click)="showDetail(item)" title="{{ item.source_description }}">
+                {{ item.source_description || '—' }}
+              </span>
+            </td>
+            <td>
+              <span class="reason-badge">{{ reasonLabel(item.reason) }}</span>
+            </td>
+            <td>
+              <span class="status-badge {{ statusClass(item.status) }}">{{ item.status }}</span>
+            </td>
+            <td class="actions-cell">
+              @if (item.status === 'open') {
+                <button class="btn-action btn-resolve" (click)="openResolve(item)" title="Resolve">&#10003;</button>
+                <button class="btn-action btn-ignore" (click)="ignoreConflict(item)" title="Ignore">&#10005;</button>
+              }
+              @if (item.status !== 'open') {
+                <button class="btn-action btn-reopen" (click)="reopenConflict(item)" title="Reopen">&#8634;</button>
+              }
+              <button class="btn-action btn-detail" (click)="showDetail(item)" title="Details">&#9432;</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage <= 1" class="btn-page">Previous</button>
+        <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage >= totalPages" class="btn-page">Next</button>
+      </div>
+    }
+  }
+
+  @if (!loading && items.length === 0) {
+    <div class="no-results">
+      <p>No conflicts found matching your filters.</p>
+      <p>Conflicts are automatically captured during pipeline processing when records cannot be mapped.</p>
+    </div>
+  }
+
+  <!-- Resolve Dialog -->
+  @if (showResolveDialog && resolveTarget) {
+    <div class="dialog-overlay" (click)="cancelResolve()">
+      <div class="dialog" (click)="$event.stopPropagation()">
+        <h2>Resolve Conflict</h2>
+        <div class="dialog-info">
+          <p><strong>Source:</strong> {{ systemLabel(resolveTarget.source_system) }} &mdash; {{ resolveTarget.source_code }}</p>
+          <p><strong>Target:</strong> {{ systemLabel(resolveTarget.target_system) }} &mdash; {{ resolveTarget.target_code }}</p>
+          <p><strong>Description:</strong> {{ resolveTarget.source_description }}</p>
+          <p><strong>Reason:</strong> {{ reasonLabel(resolveTarget.reason) }}</p>
+        </div>
+        <div class="dialog-form">
+          <label>Resolved Code</label>
+          <input type="text" [(ngModel)]="resolveCode" placeholder="Enter correct target code">
+          <label>Resolution Note</label>
+          <textarea [(ngModel)]="resolveNote" rows="3" placeholder="Describe how this was resolved..."></textarea>
+        </div>
+        <div class="dialog-actions">
+          <button class="btn-primary" (click)="submitResolve()">Resolve</button>
+          <button class="btn-cancel" (click)="cancelResolve()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Detail Panel -->
+  @if (detailItem) {
+    <div class="dialog-overlay" (click)="closeDetail()">
+      <div class="dialog dialog-detail" (click)="$event.stopPropagation()">
+        <h2>Conflict Details</h2>
+        <div class="detail-grid">
+          <div class="detail-row">
+            <span class="detail-label">ID</span>
+            <span class="detail-value">#{{ detailItem.id }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Source System</span>
+            <span class="detail-value">
+              <span class="badge badge-{{ detailItem.source_system }}">{{ systemLabel(detailItem.source_system) }}</span>
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Source Code</span>
+            <span class="detail-value code-cell">{{ detailItem.source_code }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Target System</span>
+            <span class="detail-value">
+              <span class="badge badge-{{ detailItem.target_system }}">{{ systemLabel(detailItem.target_system) }}</span>
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Target Code</span>
+            <span class="detail-value code-cell">{{ detailItem.target_code }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Description</span>
+            <span class="detail-value">{{ detailItem.source_description || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Reason</span>
+            <span class="detail-value">{{ reasonLabel(detailItem.reason) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Details</span>
+            <span class="detail-value">{{ detailItem.details || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Status</span>
+            <span class="detail-value">
+              <span class="status-badge {{ statusClass(detailItem.status) }}">{{ detailItem.status }}</span>
+            </span>
+          </div>
+          @if (detailItem.resolution) {
+            <div class="detail-row">
+              <span class="detail-label">Resolution</span>
+              <span class="detail-value">{{ detailItem.resolution }}</span>
+            </div>
+          }
+          @if (detailItem.resolved_code) {
+            <div class="detail-row">
+              <span class="detail-label">Resolved Code</span>
+              <span class="detail-value code-cell">{{ detailItem.resolved_code }}</span>
+            </div>
+          }
+          <div class="detail-row">
+            <span class="detail-label">Created</span>
+            <span class="detail-value">{{ detailItem.created_at }}</span>
+          </div>
+          @if (detailItem.resolved_at) {
+            <div class="detail-row">
+              <span class="detail-label">Resolved At</span>
+              <span class="detail-value">{{ detailItem.resolved_at }}</span>
+            </div>
+          }
+        </div>
+        <div class="dialog-actions">
+          <button class="btn-cancel" (click)="closeDetail()">Close</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

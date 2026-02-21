@@ -1,0 +1,1135 @@
+<div class="architecture-page">
+
+  <!-- ─── Floating tooltip card ─── -->
+  @if (activeTooltip) {
+    <div class="tooltip-card"
+         [class.tooltip-below]="activeTooltip.below"
+         [style.left.px]="activeTooltip.x"
+         [style.top.px]="activeTooltip.y"
+         [style.borderColor]="activeTooltip.color">
+      <div class="tooltip-card-accent" [style.background]="activeTooltip.color"></div>
+      <h4 class="tooltip-card-title" [style.color]="activeTooltip.color">{{ activeTooltip.title }}</h4>
+      @for (line of activeTooltip.lines; track $index) {
+        <p class="tooltip-card-line">{{ line }}</p>
+      }
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- HERO -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <section class="hero">
+    <h1>Data Architecture</h1>
+    <p class="subtitle">How CodeMx ingests, transforms, and maps medical coding data across seven coding systems</p>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- INTERACTIVE ARCHITECTURE DIAGRAM (SVG) -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <section class="diagram-section">
+    <h2>Architecture Overview</h2>
+    <p class="section-desc">Hover over any component to see details. The pipeline flows top-to-bottom from external data sources through processing into the database.</p>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 1100 1180" class="arch-svg" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- ── Background grid (subtle) ── -->
+        <defs>
+          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" stroke-width="0.3" opacity="0.08"/>
+          </pattern>
+          <!-- Arrow markers -->
+          <marker id="a-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <path d="M0,0.5 L7,3 L0,5.5" fill="var(--icd10)"/>
+          </marker>
+          <marker id="a-purple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <path d="M0,0.5 L7,3 L0,5.5" fill="var(--snomed)"/>
+          </marker>
+          <marker id="a-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <path d="M0,0.5 L7,3 L0,5.5" fill="var(--cpt)"/>
+          </marker>
+          <marker id="a-orange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <path d="M0,0.5 L7,3 L0,5.5" fill="var(--hcpcs)"/>
+          </marker>
+          <marker id="a-red" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <path d="M0,0.5 L7,3 L0,5.5" fill="var(--hcc)"/>
+          </marker>
+          <marker id="a-gray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <path d="M0,0.5 L7,3 L0,5.5" fill="#78909c"/>
+          </marker>
+          <marker id="a-teal" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <path d="M0,0.5 L7,3 L0,5.5" fill="#00897b"/>
+          </marker>
+          <marker id="a-ndc" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <path d="M0,0.5 L7,3 L0,5.5" fill="#9c27b0"/>
+          </marker>
+          <marker id="a-rxnorm" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <path d="M0,0.5 L7,3 L0,5.5" fill="#00897b"/>
+          </marker>
+          <!-- Glow filters -->
+          <filter id="glow-blue">
+            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="var(--icd10)" flood-opacity="0.3"/>
+          </filter>
+          <filter id="glow-purple">
+            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="var(--snomed)" flood-opacity="0.3"/>
+          </filter>
+          <filter id="glow-green">
+            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="var(--cpt)" flood-opacity="0.3"/>
+          </filter>
+          <filter id="node-sh">
+            <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.10"/>
+          </filter>
+        </defs>
+        <rect width="1100" height="1180" fill="url(#grid)"/>
+
+        <!-- ════════════ LAYER 1: External Data Sources ════════════ -->
+        <text x="550" y="30" text-anchor="middle" class="layer-label">EXTERNAL DATA SOURCES</text>
+
+        <!-- CMS.gov -->
+        <g class="arch-node source-node" (mouseenter)="showTooltip('src-cms', $event)" (mouseleave)="hideTooltip()">
+          <rect x="60" y="45" width="200" height="55" rx="12" class="node-box src-cms"/>
+          <text x="160" y="67" text-anchor="middle" class="node-title">CMS.gov</text>
+          <text x="160" y="86" text-anchor="middle" class="node-sub">ICD-10, HCC, HCPCS, CPT</text>
+          <circle cx="260" cy="72" r="4" class="pulse-dot pulse-blue"/>
+        </g>
+
+        <!-- NLM -->
+        <g class="arch-node source-node" (mouseenter)="showTooltip('src-nlm', $event)" (mouseleave)="hideTooltip()">
+          <rect x="380" y="45" width="200" height="55" rx="12" class="node-box src-nlm"/>
+          <text x="480" y="67" text-anchor="middle" class="node-title">NLM / UMLS</text>
+          <text x="480" y="86" text-anchor="middle" class="node-sub">SNOMED CT, RxNorm</text>
+          <circle cx="580" cy="72" r="4" class="pulse-dot pulse-purple"/>
+        </g>
+
+        <!-- AMA -->
+        <g class="arch-node source-node" (mouseenter)="showTooltip('src-ama', $event)" (mouseleave)="hideTooltip()">
+          <rect x="700" y="45" width="200" height="55" rx="12" class="node-box src-ama"/>
+          <text x="800" y="67" text-anchor="middle" class="node-title">AMA / CPT</text>
+          <text x="800" y="86" text-anchor="middle" class="node-sub">Sample CPT codes</text>
+          <circle cx="900" cy="72" r="4" class="pulse-dot pulse-green"/>
+        </g>
+
+        <!-- FDA -->
+        <g class="arch-node source-node" (mouseenter)="showTooltip('src-fda', $event)" (mouseleave)="hideTooltip()">
+          <rect x="920" y="45" width="180" height="55" rx="12" class="node-box src-fda"/>
+          <text x="1010" y="67" text-anchor="middle" class="node-title">FDA</text>
+          <text x="1010" y="86" text-anchor="middle" class="node-sub">NDC Directory</text>
+          <circle cx="1100" cy="72" r="4" class="pulse-dot pulse-ndc"/>
+        </g>
+
+        <!-- ── Download arrows ── -->
+        <path d="M160,100 L160,140" class="flow-line flow-blue" marker-end="url(#a-blue)"/>
+        <path d="M480,100 L480,140" class="flow-line flow-purple" marker-end="url(#a-purple)"/>
+        <path d="M800,100 L800,140" class="flow-line flow-green" marker-end="url(#a-green)"/>
+        <path d="M1010,100 L1010,140" class="flow-line flow-ndc" marker-end="url(#a-ndc)"/>
+
+        <!-- ════════════ LAYER 2: Download Scripts ════════════ -->
+        <text x="550" y="155" text-anchor="middle" class="layer-label">DOWNLOAD &amp; EXTRACT</text>
+
+        <g class="arch-node" (mouseenter)="showTooltip('step-download', $event)" (mouseleave)="hideTooltip()">
+          <rect x="180" y="165" width="700" height="44" rx="10" class="node-box step-box"/>
+          <text x="530" y="192" text-anchor="middle" class="node-title">PowerShell Download Scripts</text>
+          <text x="880" y="192" text-anchor="end" class="node-sub mono">backend/scripts/download_*.ps1</text>
+        </g>
+
+        <!-- ── Arrows to file boxes ── -->
+        <path d="M530,209 L530,228" class="flow-line flow-gray" marker-end="url(#a-gray)"/>
+
+        <!-- ════════════ LAYER 3: Raw Data Files ════════════ -->
+        
+        <!-- Wrapper box for Raw Data Files -->
+        <g class="raw-files-wrapper">
+          <rect x="10" y="230" width="1080" height="145" rx="12" class="node-box" style="fill: #ffffff; fill-opacity: 0.1; stroke: #90a4ae; stroke-width: 2; stroke-dasharray: 8 4;"/>
+          
+          <text x="550" y="247" text-anchor="middle" class="layer-label" style="font-weight: 600;">RAW DATA FILES</text>
+
+          <!-- Row 1 -->
+          <g class="arch-node file-node" (mouseenter)="showTooltip('file-icd10', $event)" (mouseleave)="hideTooltip()">
+            <rect x="20" y="260" width="160" height="50" rx="8" class="node-box file-icd10"/>
+            <text x="100" y="281" text-anchor="middle" class="node-title small">ICD-10-CM</text>
+            <text x="100" y="299" text-anchor="middle" class="node-sub tiny">icd10cm_order_2026.txt</text>
+          </g>
+          <g class="arch-node file-node" (mouseenter)="showTooltip('file-hcc', $event)" (mouseleave)="hideTooltip()">
+            <rect x="200" y="260" width="160" height="50" rx="8" class="node-box file-hcc"/>
+            <text x="280" y="281" text-anchor="middle" class="node-title small">HCC Mappings</text>
+            <text x="280" y="299" text-anchor="middle" class="node-sub tiny">*Final*Mappings.csv</text>
+          </g>
+          <g class="arch-node file-node" (mouseenter)="showTooltip('file-snomed', $event)" (mouseleave)="hideTooltip()">
+            <rect x="380" y="260" width="160" height="50" rx="8" class="node-box file-snomed"/>
+            <text x="460" y="281" text-anchor="middle" class="node-title small">SNOMED CT</text>
+            <text x="460" y="299" text-anchor="middle" class="node-sub tiny">sct2_*Snapshot*.txt</text>
+          </g>
+          <g class="arch-node file-node" (mouseenter)="showTooltip('file-hcpcs', $event)" (mouseleave)="hideTooltip()">
+            <rect x="560" y="260" width="160" height="50" rx="8" class="node-box file-hcpcs"/>
+            <text x="640" y="281" text-anchor="middle" class="node-title small">HCPCS</text>
+            <text x="640" y="299" text-anchor="middle" class="node-sub tiny">HCPC*ANWEB*.txt</text>
+          </g>
+          <g class="arch-node file-node" (mouseenter)="showTooltip('file-cpt', $event)" (mouseleave)="hideTooltip()">
+            <rect x="740" y="260" width="250" height="50" rx="8" class="node-box file-cpt"/>
+            <text x="865" y="281" text-anchor="middle" class="node-title small">CPT</text>
+            <text x="865" y="299" text-anchor="middle" class="node-sub tiny">dhs_code_list_addendum.zip</text>
+          </g>
+          <!-- Row 2 -->
+          <g class="arch-node file-node" (mouseenter)="showTooltip('file-rxnorm', $event)" (mouseleave)="hideTooltip()">
+            <rect x="20" y="320" width="160" height="50" rx="8" class="node-box file-rxnorm"/>
+            <text x="100" y="341" text-anchor="middle" class="node-title small">RxNorm</text>
+            <text x="100" y="359" text-anchor="middle" class="node-sub tiny">RXNCONSO.RRF</text>
+          </g>
+          <g class="arch-node file-node" (mouseenter)="showTooltip('file-ndc', $event)" (mouseleave)="hideTooltip()">
+            <rect x="200" y="320" width="160" height="50" rx="8" class="node-box file-ndc"/>
+            <text x="280" y="341" text-anchor="middle" class="node-title small">NDC</text>
+            <text x="280" y="359" text-anchor="middle" class="node-sub tiny">ndctext.zip</text>
+          </g>
+        </g>
+
+        <!-- ── Arrows to Phase 0 ── -->
+        <path d="M530,375 L530,405" class="flow-line flow-gray" marker-end="url(#a-gray)"/>
+        
+        <!-- ════════════ LAYER 4: File Organization (Phase 0) ════════════ -->
+        <text x="550" y="400" text-anchor="middle" class="layer-label">PHASE 0: FILE ORGANIZATION</text>
+
+        <g class="arch-node pipeline-node" (mouseenter)="showTooltip('phase-organize', $event)" (mouseleave)="hideTooltip()">
+          <rect x="150" y="410" width="800" height="85" rx="10" class="node-box" style="fill: #546e7a; fill-opacity: 0.12; stroke: #546e7a;"/>
+          <text x="550" y="432" text-anchor="middle" class="node-title">organize_data_files()</text>
+          <text x="550" y="450" text-anchor="middle" class="node-sub">downloads/ → staging/ + archive/ · Prune to loader-required files</text>
+          <circle cx="150" cy="452" r="14" class="step-num" style="fill: #546e7a;"/>
+          <text x="150" y="457" text-anchor="middle" class="step-num-text">0</text>
+          
+          <!-- File type badges inside Phase 0 -->
+          <g class="file-badges">
+            <rect x="190" y="465" width="70" height="20" rx="4" class="node-box file-icd10" opacity="0.8"/>
+            <text x="225" y="478" text-anchor="middle" class="badge-text" style="font-size: 9px; fill: var(--icd10);">ICD-10</text>
+            
+            <rect x="270" y="465" width="55" height="20" rx="4" class="node-box file-hcc" opacity="0.8"/>
+            <text x="297" y="478" text-anchor="middle" class="badge-text" style="font-size: 9px; fill: var(--hcc);">HCC</text>
+            
+            <rect x="335" y="465" width="80" height="20" rx="4" class="node-box file-snomed" opacity="0.8"/>
+            <text x="375" y="478" text-anchor="middle" class="badge-text" style="font-size: 9px; fill: var(--snomed);">SNOMED</text>
+            
+            <rect x="425" y="465" width="70" height="20" rx="4" class="node-box file-hcpcs" opacity="0.8"/>
+            <text x="460" y="478" text-anchor="middle" class="badge-text" style="font-size: 9px; fill: var(--hcpcs);">HCPCS</text>
+            
+            <rect x="505" y="465" width="50" height="20" rx="4" class="node-box file-cpt" opacity="0.8"/>
+            <text x="530" y="478" text-anchor="middle" class="badge-text" style="font-size: 9px; fill: var(--cpt);">CPT</text>
+            
+            <rect x="565" y="465" width="75" height="20" rx="4" class="node-box file-rxnorm" opacity="0.8"/>
+            <text x="602" y="478" text-anchor="middle" class="badge-text" style="font-size: 9px; fill: var(--rxnorm);">RxNorm</text>
+            
+            <rect x="650" y="465" width="55" height="20" rx="4" class="node-box file-ndc" opacity="0.8"/>
+            <text x="677" y="478" text-anchor="middle" class="badge-text" style="font-size: 9px; fill: var(--ndc);">NDC</text>
+          </g>
+        </g>
+
+        <!-- ── Arrow to Phase 1 ── -->
+        <path d="M550,495 L550,515" class="flow-line flow-gray" marker-end="url(#a-gray)"/>
+
+        <!-- ════════════ LAYER 5: Validation (Phase 1) ════════════ -->
+        <text x="550" y="510" text-anchor="middle" class="layer-label">PHASE 1: PRE-FLIGHT VALIDATION</text>
+
+        <g class="arch-node pipeline-node" (mouseenter)="showTooltip('phase-validate', $event)" (mouseleave)="hideTooltip()">
+          <rect x="130" y="520" width="840" height="55" rx="10" class="node-box" style="fill: #fb8c00; fill-opacity: 0.12; stroke: #fb8c00;"/>
+          <text x="550" y="544" text-anchor="middle" class="node-title">validate_all_sources() — 7 Validators (BaseValidator)</text>
+          <text x="550" y="564" text-anchor="middle" class="node-sub">Check file existence, format, required columns · Returns ValidationResult per source</text>
+          <circle cx="130" cy="547" r="14" class="step-num" style="fill: #fb8c00;"/>
+          <text x="130" y="552" text-anchor="middle" class="step-num-text">1</text>
+        </g>
+
+        <!-- ── Arrows from files to validators ── -->
+        <path d="M100,310 L100,520" class="flow-line flow-blue" marker-end="url(#a-blue)" opacity="0.4"/>
+        <path d="M280,310 L280,520" class="flow-line flow-red" marker-end="url(#a-red)" opacity="0.4"/>
+        <path d="M460,310 L460,520" class="flow-line flow-purple" marker-end="url(#a-purple)" opacity="0.4"/>
+        <path d="M640,310 L640,520" class="flow-line flow-orange" marker-end="url(#a-orange)" opacity="0.4"/>
+        <path d="M865,310 L865,520" class="flow-line flow-green" marker-end="url(#a-green)" opacity="0.4"/>
+        <path d="M100,370 L100,520" class="flow-line flow-teal" marker-end="url(#a-teal)" opacity="0.4"/>
+        <path d="M280,370 L280,520" class="flow-line flow-ndc" marker-end="url(#a-ndc)" opacity="0.4"/>
+
+        <!-- ── Arrow to pipeline ── -->
+        <path d="M550,575 L550,590" class="flow-line flow-gray" marker-end="url(#a-gray)"/>
+
+        <!-- ════════════ LAYER 6: Pipeline Processing ════════════ -->
+        <text x="550" y="585" text-anchor="middle" class="layer-label">PIPELINE — BasePipeline.run()</text>
+
+        <!-- Step 1 -->
+        <g class="arch-node pipeline-node" (mouseenter)="showTooltip('step-load', $event)" (mouseleave)="hideTooltip()">
+          <rect x="60" y="595" width="300" height="55" rx="10" class="node-box step1-box"/>
+          <text x="210" y="619" text-anchor="middle" class="node-title">Step 1 — Load Code Sets</text>
+          <text x="210" y="639" text-anchor="middle" class="node-sub">7 loaders · INSERT OR IGNORE · batch 5K</text>
+          <circle cx="60" cy="622" r="14" class="step-num"/>
+          <text x="60" y="627" text-anchor="middle" class="step-num-text">1</text>
+        </g>
+
+        <!-- Step 2 -->
+        <g class="arch-node pipeline-node" (mouseenter)="showTooltip('step-direct', $event)" (mouseleave)="hideTooltip()">
+          <rect x="400" y="595" width="300" height="55" rx="10" class="node-box step2-box"/>
+          <text x="550" y="619" text-anchor="middle" class="node-title">Step 2 — Direct Mappings</text>
+          <text x="550" y="639" text-anchor="middle" class="node-sub">SNOMED→ICD-10 · ICD-10→HCC</text>
+          <circle cx="400" cy="622" r="14" class="step-num"/>
+          <text x="400" y="627" text-anchor="middle" class="step-num-text">2</text>
+        </g>
+
+        <!-- Step 3 -->
+        <g class="arch-node pipeline-node" (mouseenter)="showTooltip('step-transitive', $event)" (mouseleave)="hideTooltip()">
+          <rect x="740" y="595" width="320" height="55" rx="10" class="node-box step3-box"/>
+          <text x="900" y="619" text-anchor="middle" class="node-title">Step 3 — Derived Mappings</text>
+          <text x="900" y="639" text-anchor="middle" class="node-sub">SNOMED→HCC · RxNorm↔SNOMED</text>
+          <circle cx="740" cy="622" r="14" class="step-num"/>
+          <text x="740" y="627" text-anchor="middle" class="step-num-text">3</text>
+        </g>
+
+        <!-- Step arrows -->
+        <path d="M360,622 L400,622" class="flow-line flow-gray" marker-end="url(#a-gray)" stroke-dasharray="6 3"/>
+        <path d="M700,622 L740,622" class="flow-line flow-gray" marker-end="url(#a-gray)" stroke-dasharray="6 3"/>
+
+        <!-- ── Down to DB ── -->
+        <path d="M210,650 L210,705" class="flow-line flow-blue" marker-end="url(#a-blue)"/>
+        <path d="M550,650 L550,705" class="flow-line flow-purple" marker-end="url(#a-purple)"/>
+        <path d="M900,650 L900,705" class="flow-line flow-red" marker-end="url(#a-red)"/>
+
+        <!-- ════════════ LAYER 7: Database ════════════ -->
+        <text x="550" y="705" text-anchor="middle" class="layer-label">DATABASE — SQLite</text>
+
+        <!-- DB icon -->
+        <g class="arch-node db-node" (mouseenter)="showTooltip('db-sqlite', $event)" (mouseleave)="hideTooltip()">
+          <rect x="380" y="720" width="300" height="48" rx="12" class="node-box db-box"/>
+          <text x="530" y="740" text-anchor="middle" class="node-title">coding_manager.db</text>
+          <text x="530" y="758" text-anchor="middle" class="node-sub">7 code tables · 6 mapping tables (4 active) · 1 conflict table</text>
+          <!-- db cylinder icon -->
+          <ellipse cx="405" cy="696" rx="12" ry="7" fill="none" stroke="var(--icd10)" stroke-width="1.5"/>
+          <path d="M393,696 L393,712 A12,7 0 0,0 417,712 L417,696" fill="none" stroke="var(--icd10)" stroke-width="1.5"/>
+        </g>
+
+        <!-- ── Arrow from DB to tables ── -->
+        <path d="M530,733 L530,760" class="flow-line flow-gray" marker-end="url(#a-gray)"/>
+
+        <!-- ════════════ LAYER 8: Code Tables ════════════ -->
+        <text x="550" y="760" text-anchor="middle" class="layer-label">CODE TABLES</text>
+
+        <g class="arch-node tbl-node" (mouseenter)="showTooltip('tbl-snomed', $event)" (mouseleave)="hideTooltip()">
+          <rect x="20" y="775" width="150" height="44" rx="8" class="node-box tbl-snomed"/>
+          <text x="95" y="793" text-anchor="middle" class="node-title small">snomed_codes</text>
+          <text x="95" y="810" text-anchor="middle" class="node-sub tiny">382K concepts</text>
+        </g>
+        <g class="arch-node tbl-node" (mouseenter)="showTooltip('tbl-icd10', $event)" (mouseleave)="hideTooltip()">
+          <rect x="190" y="775" width="150" height="44" rx="8" class="node-box tbl-icd10"/>
+          <text x="265" y="793" text-anchor="middle" class="node-title small">icd10_codes</text>
+          <text x="265" y="810" text-anchor="middle" class="node-sub tiny">97.5K codes</text>
+        </g>
+        <g class="arch-node tbl-node" (mouseenter)="showTooltip('tbl-hcc', $event)" (mouseleave)="hideTooltip()">
+          <rect x="360" y="775" width="130" height="44" rx="8" class="node-box tbl-hcc"/>
+          <text x="425" y="793" text-anchor="middle" class="node-title small">hcc_codes</text>
+          <text x="425" y="810" text-anchor="middle" class="node-sub tiny">45 categories</text>
+        </g>
+        <g class="arch-node tbl-node" (mouseenter)="showTooltip('tbl-cpt', $event)" (mouseleave)="hideTooltip()">
+          <rect x="510" y="775" width="120" height="44" rx="8" class="node-box tbl-cpt"/>
+          <text x="570" y="793" text-anchor="middle" class="node-title small">cpt_codes</text>
+          <text x="570" y="810" text-anchor="middle" class="node-sub tiny">20 sample</text>
+        </g>
+        <g class="arch-node tbl-node" (mouseenter)="showTooltip('tbl-hcpcs', $event)" (mouseleave)="hideTooltip()">
+          <rect x="650" y="775" width="140" height="44" rx="8" class="node-box tbl-hcpcs"/>
+          <text x="720" y="793" text-anchor="middle" class="node-title small">hcpcs_codes</text>
+          <text x="720" y="810" text-anchor="middle" class="node-sub tiny">7.8K codes</text>
+        </g>
+        <g class="arch-node tbl-node" (mouseenter)="showTooltip('tbl-rxnorm', $event)" (mouseleave)="hideTooltip()">
+          <rect x="810" y="775" width="150" height="44" rx="8" class="node-box tbl-rxnorm"/>
+          <text x="885" y="793" text-anchor="middle" class="node-title small">rxnorm_codes</text>
+          <text x="885" y="810" text-anchor="middle" class="node-sub tiny">127K drugs</text>
+        </g>
+        <g class="arch-node tbl-node" (mouseenter)="showTooltip('tbl-ndc', $event)" (mouseleave)="hideTooltip()">
+          <rect x="970" y="775" width="130" height="44" rx="8" class="node-box tbl-ndc"/>
+          <text x="1035" y="793" text-anchor="middle" class="node-title small">ndc_codes</text>
+          <text x="1035" y="810" text-anchor="middle" class="node-sub tiny">150K+</text>
+        </g>
+
+        <!-- ════════════ LAYER 9: Mapping Tables ════════════ -->
+        <text x="550" y="850" text-anchor="middle" class="layer-label">MAPPING &amp; LINKAGE TABLES</text>
+
+        <!-- Animated bezier mapping lines between tables -->
+        <!-- SNOMED → ICD-10 -->
+        <path d="M95,819 C95,850 265,850 265,819" class="map-line map-snomed-icd10" fill="none"/>
+        <!-- ICD-10 → HCC -->
+        <path d="M265,819 C265,850 425,850 425,819" class="map-line map-icd10-hcc" fill="none"/>
+        <!-- SNOMED → HCC (transitive) -->
+        <path d="M95,819 C95,860 425,860 425,819" class="map-line map-snomed-hcc" fill="none" stroke-dasharray="6 4"/>
+        <!-- RxNorm ↔ SNOMED -->
+        <path d="M885,819 C885,860 95,860 95,819" class="map-line map-rxnorm-snomed" fill="none"/>
+
+        <!-- Mapping table boxes -->
+        <g class="arch-node map-node" (mouseenter)="showTooltip('map-snomed-icd10', $event)" (mouseleave)="hideTooltip()">
+          <rect x="30" y="900" width="220" height="44" rx="8" class="node-box map-box-1"/>
+          <text x="140" y="918" text-anchor="middle" class="node-title small">snomed_icd10_mapping</text>
+          <text x="140" y="935" text-anchor="middle" class="node-sub tiny">SNOMED → ICD-10 (ExtendedMap)</text>
+        </g>
+        <g class="arch-node map-node" (mouseenter)="showTooltip('map-icd10-hcc', $event)" (mouseleave)="hideTooltip()">
+          <rect x="270" y="900" width="200" height="44" rx="8" class="node-box map-box-2"/>
+          <text x="370" y="918" text-anchor="middle" class="node-title small">icd10_hcc_mapping</text>
+          <text x="370" y="935" text-anchor="middle" class="node-sub tiny">ICD-10 → HCC (CMS CSV)</text>
+        </g>
+        <g class="arch-node map-node" (mouseenter)="showTooltip('map-snomed-hcc', $event)" (mouseleave)="hideTooltip()">
+          <rect x="490" y="900" width="210" height="44" rx="8" class="node-box map-box-3"/>
+          <text x="595" y="918" text-anchor="middle" class="node-title small">snomed_hcc_mapping</text>
+          <text x="595" y="935" text-anchor="middle" class="node-sub tiny">Transitive via ICD-10</text>
+        </g>
+        <g class="arch-node map-node" (mouseenter)="showTooltip('map-rxnorm-snomed', $event)" (mouseleave)="hideTooltip()">
+          <rect x="720" y="900" width="220" height="44" rx="8" class="node-box map-box-4"/>
+          <text x="830" y="918" text-anchor="middle" class="node-title small">rxnorm_snomed_mapping</text>
+          <text x="830" y="935" text-anchor="middle" class="node-sub tiny">Drug ↔ Concept</text>
+        </g>
+
+        <!-- ════════════ Conflict Table ════════════ -->
+        <g class="arch-node conflict-node" (mouseenter)="showTooltip('tbl-conflicts', $event)" (mouseleave)="hideTooltip()">
+          <rect x="350" y="970" width="260" height="44" rx="8" class="node-box conflict-box"/>
+          <text x="480" y="988" text-anchor="middle" class="node-title small">mapping_conflicts</text>
+          <text x="480" y="1005" text-anchor="middle" class="node-sub tiny">~46K tracked · open / resolved / ignored</text>
+        </g>
+
+        <!-- Arrows from mapping tables to conflict -->
+        <path d="M140,944 L140,970 C140,990 350,990 350,990" class="flow-line flow-red" marker-end="url(#a-red)" opacity="0.4"/>
+        <path d="M370,944 L370,970" class="flow-line flow-red" marker-end="url(#a-red)" opacity="0.4"/>
+        <path d="M595,944 L595,970 C595,990 610,990 610,990" class="flow-line flow-red" marker-end="url(#a-red)" opacity="0.4"/>
+
+        <!-- ════════════ LAYER 10: API / Frontend ════════════ -->
+        <text x="550" y="1045" text-anchor="middle" class="layer-label">APPLICATION LAYER</text>
+
+        <g class="arch-node app-node">
+          <rect x="120" y="1055" width="340" height="50" rx="12" class="node-box api-box"/>
+          <text x="290" y="1077" text-anchor="middle" class="node-title">Flask REST API</text>
+          <text x="290" y="1095" text-anchor="middle" class="node-sub">Port 5000 · /api/* endpoints</text>
+        </g>
+        <g class="arch-node app-node">
+          <rect x="560" y="1055" width="340" height="50" rx="12" class="node-box ng-box"/>
+          <text x="730" y="1077" text-anchor="middle" class="node-title">Angular 20 Frontend</text>
+          <text x="730" y="1095" text-anchor="middle" class="node-sub">Port 4200 · CodeMx UI</text>
+        </g>
+
+        <path d="M460,1080 L560,1080" class="flow-line flow-blue" marker-end="url(#a-blue)" stroke-dasharray="4 3"/>
+        <path d="M560,1085 L460,1085" class="flow-line flow-purple" marker-end="url(#a-purple)" stroke-dasharray="4 3"/>
+
+        <!-- DB → API arrow -->
+        <path d="M480,1014 L290,1055" class="flow-line flow-blue" marker-end="url(#a-blue)"/>
+
+        <!-- ── Animated data-flow particles ── -->
+        <circle r="3" class="particle particle-blue">
+          <animateMotion dur="5s" repeatCount="indefinite" path="M160,100 L160,140 L160,285 L160,452 L160,547 L160,595 L160,720"/>
+        </circle>
+        <circle r="3" class="particle particle-purple">
+          <animateMotion dur="5.5s" repeatCount="indefinite" path="M480,100 L480,140 L480,285 L480,452 L480,547 L480,595 L480,720"/>
+        </circle>
+        <circle r="3" class="particle particle-green">
+          <animateMotion dur="6s" repeatCount="indefinite" path="M800,100 L800,140 L800,285 L800,452 L800,547 L800,595 L800,720"/>
+        </circle>
+        <circle r="3" class="particle particle-ndc">
+          <animateMotion dur="6.5s" repeatCount="indefinite" path="M1010,100 L1010,140 L280,345 L280,452 L280,547 L280,595 L280,720"/>
+        </circle>
+
+      </svg>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- DETAILED SECTIONS -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- RAW DATA FILES (PHASE 0 INPUT) -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <section class="detail-section phase-section" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 3rem; border-radius: 16px; margin: 2rem auto; border: 2px solid #546e7a;">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+      <div style="width: 50px; height: 50px; background: #546e7a; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; font-weight: bold;">0</div>
+      <div>
+        <h1 style="margin: 0; font-size: 2rem; color: #546e7a;">Raw Data Files</h1>
+        <p style="margin: 0.25rem 0 0 0; color: #5f6368; font-size: 0.95rem;">Phase 0 Input · Downloaded from authoritative sources</p>
+      </div>
+    </div>
+
+    <!-- ── Data Sources ── -->
+    <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+      <h2>Data Sources &amp; Files</h2>
+      <p class="section-desc">CodeMx ingests data from seven authoritative sources. Each has a dedicated PowerShell download script that fetches ZIP archives and extracts the needed files.</p>
+
+      <div class="source-grid">
+      <div class="source-card card-icd10">
+        <div class="card-header">
+          <span class="badge badge-icd10">ICD-10-CM</span>
+          <span class="source-label">CMS.gov</span>
+        </div>
+        <h3>International Classification of Diseases</h3>
+        <div class="file-list">
+          <div class="file-item">
+            <span class="file-icon">📥</span>
+            <div>
+              <strong>Download:</strong> 2026-code-descriptions-tabular-order.zip
+              <div class="file-url">cms.gov/files/zip/</div>
+            </div>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">📄</span>
+            <div>
+              <strong>Used:</strong> icd10cm_order_2026.txt
+              <div class="file-detail">Fixed-width · code pos 6-14 · desc pos 16-77/77+</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stat">~97,500 codes · 22 chapters · Public domain</div>
+      </div>
+
+      <div class="source-card card-hcc">
+        <div class="card-header">
+          <span class="badge badge-hcc">HCC</span>
+          <span class="source-label">CMS.gov</span>
+        </div>
+        <h3>Hierarchical Condition Categories</h3>
+        <div class="file-list">
+          <div class="file-item">
+            <span class="file-icon">📥</span>
+            <div>
+              <strong>Download:</strong> 2026-initial-icd-10-cm-mappings.zip
+              <div class="file-url">+ midyear-final-icd-10-mappings.zip</div>
+            </div>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">📄</span>
+            <div>
+              <strong>Used:</strong> 2026 Final ICD-10-CM Mappings.csv
+              <div class="file-detail">CSV · ICD-10 → HCC V28 category number</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stat">~45 categories · ~9,500 mapping pairs · Public domain</div>
+      </div>
+
+      <div class="source-card card-snomed">
+        <div class="card-header">
+          <span class="badge badge-snomed">SNOMED</span>
+          <span class="source-label">NLM / UMLS</span>
+        </div>
+        <h3>SNOMED CT US Edition</h3>
+        <div class="file-list">
+          <div class="file-item">
+            <span class="file-icon">📥</span>
+            <div>
+              <strong>Download:</strong> SnomedCT_ManagedServiceUS_*.zip
+              <div class="file-url">uts.nlm.nih.gov (UMLS license)</div>
+            </div>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">📄</span>
+            <div>
+              <strong>Used:</strong> sct2_Concept_Snapshot + sct2_Description_Snapshot
+              <div class="file-detail">+ der2_ExtendedMap (refsetId 6011000124106)</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stat">~382K concepts · UMLS license (free registration)</div>
+      </div>
+
+      <div class="source-card card-hcpcs">
+        <div class="card-header">
+          <span class="badge badge-hcpcs">HCPCS</span>
+          <span class="source-label">CMS.gov</span>
+        </div>
+        <h3>Healthcare Common Procedure Coding System</h3>
+        <div class="file-list">
+          <div class="file-item">
+            <span class="file-icon">📥</span>
+            <div>
+              <strong>Download:</strong> january-2025-alpha-numeric-hcpcs-file.zip
+              <div class="file-url">cms.gov/files/zip/</div>
+            </div>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">📄</span>
+            <div>
+              <strong>Used:</strong> HCPC2025_JAN_ANWEB_*.txt
+              <div class="file-detail">Fixed-width · latin-1 encoding · code (0-5)</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stat">~7,800 codes · Public domain</div>
+      </div>
+
+      <div class="source-card card-cpt">
+        <div class="card-header">
+          <span class="badge badge-cpt">CPT</span>
+          <span class="source-label">AMA</span>
+        </div>
+        <h3>Current Procedural Terminology</h3>
+        <div class="file-list">
+          <div class="file-item">
+            <span class="file-icon">📄</span>
+            <div>
+              <strong>Included:</strong> sample_cpt_codes.csv
+              <div class="file-detail">20 sample codes · Full set requires AMA license</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stat">Sample data · AMA copyright</div>
+      </div>
+
+      <div class="source-card card-rxnorm">
+        <div class="card-header">
+          <span class="badge" style="background: #00897b; color: #fff;">RxNorm</span>
+          <span class="source-label">NLM</span>
+        </div>
+        <h3>Drug Terminology</h3>
+        <div class="file-list">
+          <div class="file-item">
+            <span class="file-icon">📥</span>
+            <div>
+              <strong>Download:</strong> RxNorm_full_*.zip
+              <div class="file-url">nlm.nih.gov (UMLS license)</div>
+            </div>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">📄</span>
+            <div>
+              <strong>Used:</strong> rrf/RXNCONSO.RRF
+              <div class="file-detail">Pipe-delimited · SAB=RXNORM · Key TTYs only</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stat">~127K drug concepts · UMLS license</div>
+      </div>
+
+      <div class="source-card card-ndc">
+        <div class="card-header">
+          <span class="badge" style="background: #9c27b0; color: #fff;">NDC</span>
+          <span class="source-label">FDA</span>
+        </div>
+        <h3>National Drug Code Directory</h3>
+        <div class="file-list">
+          <div class="file-item">
+            <span class="file-icon">📥</span>
+            <div>
+              <strong>Download:</strong> ndctext.zip
+              <div class="file-url">fda.gov (Public domain)</div>
+            </div>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">📄</span>
+            <div>
+              <strong>Used:</strong> product.txt
+              <div class="file-detail">Tab-delimited · 11-digit NDC codes</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stat">~150K+ product codes · Public domain</div>
+      </div>
+
+      <div class="source-card card-cpt">
+        <div class="card-header">
+          <span class="badge" style="background: var(--cpt); color: #fff;">CPT</span>
+          <span class="source-label">CMS.gov</span>
+        </div>
+        <h3>CPT / Designated Health Services (Stark Law)</h3>
+        <div class="file-list">
+          <div class="file-item">
+            <span class="file-icon">📥</span>
+            <div>
+              <strong>Download:</strong> 2026_dhs_code_list_addendum_*.zip
+              <div class="file-detail">Loads CPT codes &amp; tags CPT/HCPCS with dhs_category</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-stat">~970 CPT/HCPCS codes · Public domain</div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- PIPELINE PROCESSING -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ── Pipeline Steps ── -->
+  <section class="detail-section">
+    <h2>Pipeline Processing Steps</h2>
+    <p class="section-desc">The pipeline runs as <code>python -m backend.pipeline.process_data</code> (or <code>python -m pipeline.pipeline</code>) and executes in five sequential phases: file organization, validation, loading, direct mapping, and derived mapping.</p>
+
+    <div class="steps-timeline">
+      <!-- Phase 0 -->
+      <div class="step-card">
+        <div class="step-number" style="background: #546e7a;">0</div>
+        <div class="step-content">
+          <h3>File Organization</h3>
+          <p><strong>Function:</strong> <code>organize_data_files()</code> from <code>pipeline/helpers.py</code></p>
+          <p>Reorganizes downloaded files from the <code>backend/data/downloads/</code> directory into a clean staging environment. This phase runs automatically before validation unless disabled with <code>--no-organize</code>.</p>
+
+          <div class="load-order">
+            <div class="load-item" style="--accent: #546e7a;">
+              <span class="load-num">1</span>
+              <span class="load-name">Move to staging</span>
+              <span class="load-info">Moves files from downloads/ to staging/ by keyword matching (SNOMED, ICD-10, HCC, etc.)</span>
+            </div>
+            <div class="load-item" style="--accent: #546e7a;">
+              <span class="load-num">2</span>
+              <span class="load-name">Prune staging</span>
+              <span class="load-info">Keeps only files that loaders actually read; moves unused files to archive/ for audit trail</span>
+            </div>
+            <div class="load-item" style="--accent: #546e7a;">
+              <span class="load-num">3</span>
+              <span class="load-name">Result</span>
+              <span class="load-info">Clean staging environment with exactly the files each loader expects</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 1 -->
+      <div class="step-card">
+        <div class="step-number" style="background: #fb8c00;">1</div>
+        <div class="step-content">
+          <h3>Pre-flight Validation</h3>
+          <p><strong>Function:</strong> <code>validate_all_sources()</code> from <code>pipeline/validators.py</code></p>
+          <p>Validates all data sources before processing begins. Each validator extends <code>BaseValidator</code> and checks file existence, format, and required columns. Returns a <code>ValidationResult</code> per source.</p>
+
+          <div class="load-order">
+            <div class="load-item" style="--accent: var(--snomed);">
+              <span class="load-num">1</span>
+              <span class="load-name">SnomedValidator</span>
+              <span class="load-info">Checks SNOMED CT zip contains sct2_Concept_Snapshot and sct2_Description_Snapshot files</span>
+            </div>
+            <div class="load-item" style="--accent: var(--icd10);">
+              <span class="load-num">2</span>
+              <span class="load-name">ICD10Validator</span>
+              <span class="load-info">Verifies icd10cm_order_*.txt exists (excluding addenda files)</span>
+            </div>
+            <div class="load-item" style="--accent: var(--hcc);">
+              <span class="load-num">3</span>
+              <span class="load-name">HCCValidator</span>
+              <span class="load-info">Checks for *Mappings.csv files with required HCC columns</span>
+            </div>
+            <div class="load-item" style="--accent: var(--cpt);">
+              <span class="load-num">4</span>
+              <span class="load-name">CPTValidator</span>
+              <span class="load-info">Verifies dhs_code_list zip exists</span>
+            </div>
+            <div class="load-item" style="--accent: var(--hcpcs);">
+              <span class="load-num">5</span>
+              <span class="load-name">HCPCSValidator</span>
+              <span class="load-info">Checks for ANWEB fixed-width .txt file</span>
+            </div>
+            <div class="load-item" style="--accent: #00897b;">
+              <span class="load-num">6</span>
+              <span class="load-name">RxNormValidator</span>
+              <span class="load-info">Verifies RxNorm_full zip contains RXNCONSO.RRF</span>
+            </div>
+            <div class="load-item" style="--accent: #9c27b0;">
+              <span class="load-num">7</span>
+              <span class="load-name">NDCValidator</span>
+              <span class="load-info">Checks ndctext.zip exists and contains product.txt</span>
+            </div>
+          </div>
+          <p><strong>Note:</strong> By default (<code>strict=False</code>), the pipeline continues with available sources even if some validators fail. Use <code>--strict</code> to abort on any validation failure.</p>
+        </div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Load All Code Sets (BaseLoader)</h3>
+          <p><strong>Base class:</strong> <code>BaseLoader</code> from <code>pipeline/base.py</code></p>
+          <p>Processes 7 data sources sequentially. Each loader extends <code>BaseLoader</code>, implements <code>_load_from_source(session)</code>, and uses <code>bulk_insert()</code> helper from <code>helpers.py</code> with batch size 5,000. The public <code>load()</code> method handles timing, commits, and logging.</p>
+
+          <div class="load-order">
+            <div class="load-item" style="--accent: var(--snomed);">
+              <span class="load-num">1</span>
+              <span class="load-name">SNOMED CT</span>
+              <span class="load-info">sct2_Concept + Description snapshots → <strong>382K</strong> concepts</span>
+            </div>
+            <div class="load-item" style="--accent: var(--icd10);">
+              <span class="load-num">2</span>
+              <span class="load-name">ICD-10-CM</span>
+              <span class="load-info">icd10cm_order_2026.txt (fixed-width) → <strong>97.5K</strong> codes</span>
+            </div>
+            <div class="load-item" style="--accent: var(--hcc);">
+              <span class="load-num">3</span>
+              <span class="load-name">HCC</span>
+              <span class="load-info">Final ICD-10-CM Mappings.csv → <strong>45</strong> unique HCC categories</span>
+            </div>
+            <div class="load-item" style="--accent: var(--cpt);">
+              <span class="load-num">4</span>
+              <span class="load-name">CPT</span>
+              <span class="load-info">DHS Code List zip (tab-delimited .txt) → <strong>970</strong> CPT/HCPCS codes + dhs_category tags</span>
+            </div>
+            <div class="load-item" style="--accent: var(--hcpcs);">
+              <span class="load-num">5</span>
+              <span class="load-name">HCPCS</span>
+              <span class="load-info">HCPC*ANWEB*.txt (fixed-width, latin-1) → <strong>7.8K</strong> codes</span>
+            </div>
+            <div class="load-item" style="--accent: #00897b;">
+              <span class="load-num">6</span>
+              <span class="load-name">RxNorm</span>
+              <span class="load-info">RXNCONSO.RRF (SAB=RXNORM, key TTYs) → <strong>127K</strong> drugs</span>
+            </div>
+            <div class="load-item" style="--accent: #9c27b0;">
+              <span class="load-num">7</span>
+              <span class="load-name">NDC</span>
+              <span class="load-info">ndctext.zip (pipe-delimited) → <strong>150K+</strong> product codes</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Build Direct Mappings (BaseMapper)</h3>
+          <p><strong>Base class:</strong> <code>BaseMapper</code> from <code>pipeline/base.py</code></p>
+          <p>Establishes primary cross-references between coding systems using authoritative mapping files. Each mapper extends <code>BaseMapper</code>, implements <code>_build_from_source(session)</code>, and validates that both source and target codes exist in the database.</p>
+          <div class="mapping-detail">
+            <div class="map-row">
+              <span class="badge badge-snomed">SNOMED</span>
+              <span class="map-arrow">→</span>
+              <span class="badge badg<strong>SnomedIcd10Mapper:</strong> e-icd10">ICD-10</span>
+              <span class="map-desc">Uses SNOMED CT ExtendedMap refset (active=1, refsetId 6011000124106). Parses TSV, normalizes ICD-10 codes with decimal formatting, validates both sides exist in DB.</span>
+            </div>
+            <div class="map-row">
+              <span class="badge badge-icd10">ICD-10</span>
+              <span class="map-arrow">→</span>
+              <span class="badge badge-hcc">HCC</span>
+              <span class="map-desc"><strong>Icd10HccMapper:</strong> Parses CMS CSV (Final preferred), formats ICD-10 code, builds HCC(n) code identifier, validates both sides in DB.</span>
+            </div>
+            <div class="map-row conflict-row">
+              <span class="conflict-icon">⚠</span>
+              <span class="map-desc">When a mapping references a code not found in the database, a <strong>MappingConflict</strong> record is created with reason <code>source_not_found</code> or <code>target_not_found</code>.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Build Derived &amp; Cross-System Mappings (BaseMapper)</h3>
+          <p><strong>Base class:</strong> <code>BaseMapper</code> from <code>pipeline/base.py</code></p>
+          <p>Derives additional relationships by chaining existing direct mappings or parsing cross-reference data. These mappers also extend <code>BaseMapper</code> and implement <code>_build_from_source(session)</code>.</p>
+          <div class="mapping-detail">
+            <div class="map-row">
+              <span class="badge badge-snomed">SNOMED</span>
+              <span class="map-arrow">→</span>
+              <span class="badge badge-hcc">SnomedHccMapper (Transitive)</span>
+              <span class="map-desc"><strong>Transitive derivation:</strong> For each SNOMED→ICD-10 pair, looks up ICD-10→HCC to produce SNOMED→HCC. Stores <code>via_icd10_code</code> for full traceability.</span>
+            </div>
+            <div class="map-row">
+              <span class="badge" style="background: #00897b; color: #fff;">RxNorm</span>
+              <span class="map-arrow">↔</span>
+              <span class="badge badge-snomed">SNOMED</span>
+              <span class="map-desc"><strong>RxNormSnomedMapper:</strong> Re-scans RXNCONSO.RRF for <code>SAB=SNOMEDCT_US</code> rows. RXCUI maps to RxNorm code, SCUI (field 9) maps to SNOMED concept code.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Mapping Diagram ── -->
+  <section class="detail-section">
+    <h2>Cross-System Mapping Flow</h2>
+    <p class="section-desc">This diagram shows how the six coding systems are connected through direct and transitive mappings.</p>
+
+    <div class="mapping-flow-diagram">
+      <svg viewBox="0 0 800 320" class="mapping-flow-svg">
+        <defs>
+          <marker id="mf-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <path d="M0,0.5 L7,3 L0,5.5" fill="var(--text-secondary)"/>
+          </marker>
+        </defs>
+
+        <!-- System nodes -->
+        <g class="mf-node">
+          <rect x="10" y="110" width="120" height="50" rx="10" class="mf-box" style="stroke: var(--snomed);"/>
+          <text x="70" y="140" text-anchor="middle" class="mf-label" style="fill: var(--snomed);">SNOMED CT</text>
+          <text x="70" y="153" text-anchor="middle" class="mf-count">382K</text>
+        </g>
+        <g class="mf-node">
+          <rect x="240" y="30" width="120" height="50" rx="10" class="mf-box" style="stroke: var(--icd10);"/>
+          <text x="300" y="60" text-anchor="middle" class="mf-label" style="fill: var(--icd10);">ICD-10-CM</text>
+          <text x="300" y="73" text-anchor="middle" class="mf-count">97.5K</text>
+        </g>
+        <g class="mf-node">
+          <rect x="480" y="110" width="120" height="50" rx="10" class="mf-box" style="stroke: var(--hcc);"/>
+          <text x="540" y="140" text-anchor="middle" class="mf-label" style="fill: var(--hcc);">HCC</text>
+          <text x="540" y="153" text-anchor="middle" class="mf-count">45 cats</text>
+        </g>
+        <g class="mf-node">
+          <rect x="10" y="240" width="120" height="50" rx="10" class="mf-box" style="stroke: #00897b;"/>
+          <text x="70" y="270" text-anchor="middle" class="mf-label" style="fill: #00897b;">RxNorm</text>
+          <text x="70" y="283" text-anchor="middle" class="mf-count">127K</text>
+        </g>
+        <g class="mf-node">
+          <rect x="480" y="240" width="120" height="50" rx="10" class="mf-box" style="stroke: var(--cpt);"/>
+          <text x="540" y="270" text-anchor="middle" class="mf-label" style="fill: var(--cpt);">CPT</text>
+          <text x="540" y="283" text-anchor="middle" class="mf-count">20 sample</text>
+        </g>
+        <g class="mf-node">
+          <rect x="660" y="110" width="120" height="50" rx="10" class="mf-box" style="stroke: var(--hcpcs);"/>
+          <text x="720" y="140" text-anchor="middle" class="mf-label" style="fill: var(--hcpcs);">HCPCS</text>
+          <text x="720" y="153" text-anchor="middle" class="mf-count">7.8K</text>
+        </g>
+
+        <!-- Direct mapping arrows -->
+        <!-- SNOMED → ICD-10 -->
+        <path d="M130,120 C180,60 200,55 240,55" fill="none" stroke="var(--snomed)" stroke-width="2" marker-end="url(#mf-arrow)" class="mf-line"/>
+        <text x="170" y="70" class="mf-edge-label" fill="var(--snomed)">ExtendedMap</text>
+
+        <!-- ICD-10 → HCC -->
+        <path d="M360,55 C420,55 440,100 480,120" fill="none" stroke="var(--icd10)" stroke-width="2" marker-end="url(#mf-arrow)" class="mf-line"/>
+        <text x="420" y="70" class="mf-edge-label" fill="var(--icd10)">CMS CSV</text>
+
+        <!-- SNOMED → HCC (transitive, dashed) -->
+        <path d="M130,145 C300,200 400,170 480,145" fill="none" stroke="var(--hcc)" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#mf-arrow)" class="mf-line mf-transitive"/>
+        <text x="300" y="195" class="mf-edge-label" fill="var(--hcc)">Transitive</text>
+
+        <!-- RxNorm ↔ SNOMED -->
+        <path d="M70,240 L70,160" fill="none" stroke="#00897b" stroke-width="2" marker-end="url(#mf-arrow)" class="mf-line"/>
+        <text x="85" y="205" class="mf-edge-label" fill="#00897b">RXNCONSO</text>
+
+        <!-- SNOMED → CPT (schema only) -->
+        <path d="M130,155 C300,260 400,265 480,265" fill="none" stroke="var(--cpt)" stroke-width="1" stroke-dasharray="3 5" marker-end="url(#mf-arrow)" opacity="0.35"/>
+        <text x="300" y="275" class="mf-edge-label" fill="var(--cpt)" opacity="0.5">Schema only</text>
+
+        <!-- SNOMED → HCPCS (schema only) -->
+        <path d="M130,130 C400,70 600,80 660,130" fill="none" stroke="var(--hcpcs)" stroke-width="1" stroke-dasharray="3 5" marker-end="url(#mf-arrow)" opacity="0.35"/>
+        <text x="500" y="85" class="mf-edge-label" fill="var(--hcpcs)" opacity="0.5">Schema only</text>
+
+        <!-- Animated particles on lines -->
+        <circle r="3" fill="var(--snomed)" opacity="0.8">
+          <animateMotion dur="2.5s" repeatCount="indefinite" path="M130,120 C180,60 200,55 240,55"/>
+        </circle>
+        <circle r="3" fill="var(--icd10)" opacity="0.8">
+          <animateMotion dur="2.5s" repeatCount="indefinite" path="M360,55 C420,55 440,100 480,120"/>
+        </circle>
+        <circle r="3" fill="var(--hcc)" opacity="0.8">
+          <animateMotion dur="3s" repeatCount="indefinite" path="M130,145 C300,200 400,170 480,145"/>
+        </circle>
+        <circle r="3" fill="#00897b" opacity="0.8">
+          <animateMotion dur="2s" repeatCount="indefinite" path="M70,240 L70,160"/>
+        </circle>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- MAPPING METHODOLOGY – Detailed Algorithms -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <section class="detail-section methodology-section">
+    <h2>Mapping Methodology</h2>
+    <p class="section-desc">
+      Every cross-system mapping in CodeMx uses <strong>deterministic, exact-match</strong> algorithms
+      on standardised code identifiers. No fuzzy matching, probabilistic scoring, or NLP-based
+      techniques are employed. The only transformation applied before matching is code
+      normalisation (e.g.&nbsp;ICD-10 decimal formatting). Below is a detailed breakdown of each
+      mapping type.
+    </p>
+
+    <div class="methodology-grid">
+
+      <!-- ── 1. SNOMED → ICD-10-CM ── -->
+      <div class="method-card" style="--method-color: var(--snomed);">
+        <div class="method-header">
+          <span class="badge badge-snomed">SNOMED CT</span>
+          <span class="method-arrow">→</span>
+          <span class="badge badge-icd10">ICD-10-CM</span>
+        </div>
+        <h3>SNOMED → ICD-10-CM Mapping</h3>
+        <table class="method-table">
+          <tr><td class="mt-label">Source file</td><td>SNOMED CT US Edition — <code>der2_iisssccRefset_ExtendedMapSnapshot_US*.txt</code> (TSV inside release ZIP)</td></tr>
+          <tr><td class="mt-label">Algorithm</td><td><strong>Exact string match</strong> on <code>referencedComponentId</code> (SNOMED concept ID) and <code>mapTarget</code> (ICD-10-CM code)</td></tr>
+          <tr><td class="mt-label">Filters</td><td><code>active = 1</code> &amp; <code>refsetId = 6011000124106</code> (US ICD-10-CM map refset)</td></tr>
+          <tr><td class="mt-label">Normalisation</td><td>ICD-10 codes ≥ 4 chars are formatted with a decimal after position 3 (e.g. <code>E119</code> → <code>E11.9</code>) via <code>_format_icd10_code()</code></td></tr>
+          <tr><td class="mt-label">Validation</td><td>Both SNOMED and ICD-10 codes must exist in the database; mismatches create a <code>MappingConflict</code></td></tr>
+          <tr><td class="mt-label">Metadata preserved</td><td><code>map_group</code>, <code>map_priority</code>, <code>map_rule</code>, <code>map_advice</code>, <code>correlation_id</code></td></tr>
+          <tr><td class="mt-label">Fuzzy matching?</td><td>❌ None</td></tr>
+        </table>
+      </div>
+
+      <!-- ── 2. ICD-10-CM → HCC ── -->
+      <div class="method-card" style="--method-color: var(--icd10);">
+        <div class="method-header">
+          <span class="badge badge-icd10">ICD-10-CM</span>
+          <span class="method-arrow">→</span>
+          <span class="badge badge-hcc">HCC</span>
+        </div>
+        <h3>ICD-10-CM → HCC Mapping</h3>
+        <table class="method-table">
+          <tr><td class="mt-label">Source file</td><td>CMS HCC Risk Adjustment — <code>Final ICD-10-CM Mappings V28.csv</code> / <code>2025 Final*.csv</code></td></tr>
+          <tr><td class="mt-label">Algorithm</td><td><strong>Exact string match</strong> on <code>Diagnosis Code</code> (column 0, formatted with decimal) and <code>HCC V28</code> (column 6, prefixed as <code>HCC{{ '{' }}n{{ '}' }}</code>)</td></tr>
+          <tr><td class="mt-label">Normalisation</td><td>ICD-10 code formatted with <code>_format_icd10_code()</code>; HCC code prefixed as <code>HCC{{ '{' }}n{{ '}' }}</code> (e.g. column value <code>19</code> → <code>HCC19</code>)</td></tr>
+          <tr><td class="mt-label">Validation</td><td>Both ICD-10 and HCC codes must exist in the database; mismatches create a <code>MappingConflict</code></td></tr>
+          <tr><td class="mt-label">Metadata preserved</td><td><code>payment_year</code>, <code>model_version</code></td></tr>
+          <tr><td class="mt-label">Fuzzy matching?</td><td>❌ None</td></tr>
+        </table>
+      </div>
+
+      <!-- ── 3. SNOMED → HCC (Transitive) ── -->
+      <div class="method-card" style="--method-color: var(--hcc);">
+        <div class="method-header">
+          <span class="badge badge-snomed">SNOMED CT</span>
+          <span class="method-arrow">→</span>
+          <span class="badge badge-icd10">ICD-10</span>
+          <span class="method-arrow">→</span>
+          <span class="badge badge-hcc">HCC</span>
+        </div>
+        <h3>SNOMED → HCC Transitive Mapping</h3>
+        <table class="method-table">
+          <tr><td class="mt-label">Source</td><td>Derived — no external file. Chains two existing direct mappings</td></tr>
+          <tr><td class="mt-label">Algorithm</td><td><strong>Transitive derivation:</strong> For each row in <code>snomed_icd10_mapping</code>, look up all matching rows in <code>icd10_hcc_mapping</code>. Produces a SNOMED→HCC pair for every match</td></tr>
+          <tr><td class="mt-label">Deduplication</td><td>Uses a <code>seen</code> set of <code>(snomed_code, hcc_code)</code> tuples to avoid duplicate mapping rows</td></tr>
+          <tr><td class="mt-label">Traceability</td><td>Each mapping row stores <code>via_icd10_code</code> — the ICD-10 code used as the intermediate bridge</td></tr>
+          <tr><td class="mt-label">Fuzzy matching?</td><td>❌ None — both legs are exact matches previously validated</td></tr>
+        </table>
+      </div>
+
+      <!-- ── 4. RxNorm ↔ SNOMED ── -->
+      <div class="method-card" style="--method-color: #00897b;">
+        <div class="method-header">
+          <span class="badge" style="background:#00897b;color:#fff;">RxNorm</span>
+          <span class="method-arrow">↔</span>
+          <span class="badge badge-snomed">SNOMED CT</span>
+        </div>
+        <h3>RxNorm ↔ SNOMED CT Mapping</h3>
+        <table class="method-table">
+          <tr><td class="mt-label">Source file</td><td>RxNorm Full Release — <code>RXNCONSO.RRF</code> (pipe-delimited)</td></tr>
+          <tr><td class="mt-label">Algorithm</td><td><strong>Exact string match</strong> on rows where <code>SAB = SNOMEDCT_US</code>. <code>RXCUI</code> (column 0) maps to RxNorm code; <code>SCUI</code> (column 9) maps to SNOMED concept code</td></tr>
+          <tr><td class="mt-label">Validation</td><td>Both the RxNorm code (<code>RXCUI</code>) and the SNOMED code (<code>SCUI</code>) must exist in their respective tables</td></tr>
+          <tr><td class="mt-label">Metadata preserved</td><td><code>relationship = 'SNOMEDCT_US'</code> (the SAB value indicating the source vocabulary)</td></tr>
+          <tr><td class="mt-label">Fuzzy matching?</td><td>❌ None</td></tr>
+        </table>
+      </div>
+
+      <!-- ── 5. RxNorm Enrichment (RXNSAT + RXNREL) ── -->
+      <div class="method-card" style="--method-color: #00897b;">
+        <div class="method-header">
+          <span class="badge" style="background:#00897b;color:#fff;">RxNorm</span>
+          <span class="method-arrow">⟵</span>
+          <span class="badge" style="background:#546e7a;color:#fff;">RXNSAT / RXNREL</span>
+        </div>
+        <h3>RxNorm Attribute &amp; Relationship Enrichment</h3>
+        <table class="method-table">
+          <tr><td class="mt-label">Source files</td><td><code>RXNSAT.RRF</code> (attributes) and <code>RXNREL.RRF</code> (relationships), both pipe-delimited</td></tr>
+          <tr><td class="mt-label">Attributes</td><td><strong>Exact RXCUI match</strong> in RXNSAT. Extracts ATN values: <code>RxTerm_Form</code>, <code>AVAILABLE_STRENGTH</code>, <code>HUMAN_DRUG</code>, <code>VET_DRUG</code>, <code>BN_CARDINALITY</code>, <code>NDC</code>, <code>QUANTITY</code>, <code>QUALITATIVE_DISTINCTION</code></td></tr>
+          <tr><td class="mt-label">Relationships</td><td><strong>Exact RXCUI match</strong> in RXNREL. Stores <code>RXCUI1</code>, <code>RXCUI2</code>, <code>RELA</code> (relationship type), <code>SAB</code>. NDC codes collected per RXCUI via ATN = <code>NDC</code></td></tr>
+          <tr><td class="mt-label">Fuzzy matching?</td><td>❌ None — pure key-based lookup on RXCUI</td></tr>
+        </table>
+      </div>
+
+      <!-- ── 6. CPT → DHS Category Tagging ── -->
+      <div class="method-card" style="--method-color: var(--cpt);">
+        <div class="method-header">
+          <span class="badge badge-cpt">CPT</span>
+          <span class="method-sep">/</span>
+          <span class="badge badge-hcpcs">HCPCS</span>
+          <span class="method-arrow">⟵</span>
+          <span class="badge badge-cpt">DHS Code List</span>
+        </div>
+        <h3>CPT Load &amp; DHS Category Tagging</h3>
+        <table class="method-table">
+          <tr><td class="mt-label">Source file</td><td>DHS Code List Addendum zip (tab-delimited text inside)</td></tr>
+          <tr><td class="mt-label">Algorithm</td><td><strong>Exact code match</strong> — loads CPT codes (5-digit numeric) and HCPCS codes (alpha+4 digits), tags each with <code>dhs_category</code></td></tr>
+          <tr><td class="mt-label">Fuzzy matching?</td><td>❌ None</td></tr>
+        </table>
+      </div>
+
+      <!-- ── Conflict Recording ── -->
+      <div class="method-card conflict-card" style="--method-color: #ff9800;">
+        <div class="method-header">
+          <span class="badge" style="background:#ff9800;color:#fff;">⚠ Conflict Recording</span>
+        </div>
+        <h3>Mapping Conflict Tracking</h3>
+        <table class="method-table">
+          <tr><td class="mt-label">When triggered</td><td>During any mapping build step, if either the <strong>source code</strong> or <strong>target code</strong> does not exist in the database</td></tr>
+          <tr><td class="mt-label">Record fields</td><td><code>mapping_type</code> (e.g. <code>snomed_icd10</code>), <code>source_code</code>, <code>target_code</code>, <code>reason</code> (<code>source_not_found</code> or <code>target_not_found</code>), <code>details</code> (includes original map_rule and map_advice where available)</td></tr>
+          <tr><td class="mt-label">Purpose</td><td>Provides a full audit trail so data engineers can investigate and resolve mapping discrepancies without data loss</td></tr>
+        </table>
+      </div>
+
+    </div>
+
+    <div class="methodology-summary">
+      <h3>Summary</h3>
+      <p>
+        All mappings use <strong>exact string matching on standardised code identifiers</strong>.
+        No fuzzy matching, probabilistic algorithms, or NLP-based matching is employed anywhere in the pipeline.
+        Code normalisation (e.g.&nbsp;ICD-10 decimal formatting, HCC code prefixing) is the only
+        transformation applied before matching. Every mapping step validates that both the source
+        and target codes exist in the database, and records a <code>MappingConflict</code> when
+        validation fails.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Database Schema ── -->
+  <section class="detail-section">
+    <h2>Database Schema</h2>
+    <p class="section-desc">All data is stored in a single SQLite database at <code>backend/data/coding_manager.db</code>. The schema includes 7 code tables, 6 mapping (association) tables, and 1 conflict tracking table.</p>
+
+    <div class="schema-grid">
+      <div class="schema-card">
+        <h3>Code Tables</h3>
+        <table class="schema-table">
+          <thead><tr><th>Table</th><th>PK</th><th>Records</th><th>Key Columns</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-snomed">snomed_codes</span></td><td>code (20)</td><td>382K</td><td>description, semantic_tag, active</td></tr>
+            <tr><td><span class="badge badge-icd10">icd10_codes</span></td><td>code (10)</td><td>97.5K</td><td>description, category, chapter, is_header</td></tr>
+            <tr><td><span class="badge badge-hcc">hcc_codes</span></td><td>code (10)</td><td>45</td><td>description, coefficient, model_version</td></tr>
+            <tr><td><span class="badge badge-cpt">cpt_codes</span></td><td>code (10)</td><td>970</td><td>short/long_description, dhs_category</td></tr>
+            <tr><td><span class="badge badge-hcpcs">hcpcs_codes</span></td><td>code (10)</td><td>7.8K</td><td>short/long_description, dhs_category</td></tr>
+            <tr><td><span class="badge" style="background:#00897b;color:#fff;">rxnorm_codes</span></td><td>code (20)</td><td>127K</td><td>name, term_type, suppress</td></tr>
+            <tr><td><span class="badge" style="background:#9c27b0;color:#fff;">ndc_codes</span></td><td>code (20)</td><td>150K+</td><td>product_name, dosage_form, route, strength</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="schema-card">
+        <h3>Mapping Tables</h3>
+        <table class="schema-table">
+          <thead><tr><th>Table</th><th>FK 1</th><th>FK 2</th><th>Notable Columns</th></tr></thead>
+          <tbody>
+            <tr><td>snomed_icd10_mapping</td><td>snomed_code</td><td>icd10_code</td><td>map_group, map_rule, map_advice</td></tr>
+            <tr><td>icd10_hcc_mapping</td><td>icd10_code</td><td>hcc_code</td><td>payment_year, model_version</td></tr>
+            <tr><td>snomed_hcc_mapping</td><td>snomed_code</td><td>hcc_code</td><td>via_icd10_code (traceability)</td></tr>
+            <tr><td>rxnorm_snomed_mapping</td><td>rxnorm_code</td><td>snomed_code</td><td>relationship</td></tr>
+            <tr><td>snomed_cpt_mapping</td><td>snomed_code</td><td>cpt_code</td><td>Schema defined, not populated</td></tr>
+            <tr><td>snomed_hcpcs_mapping</td><td>snomed_code</td><td>hcpcs_code</td><td>Schema defined, not populated</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Running the Pipeline ── -->
+  <section class="detail-section">
+    <h2>Running the Pipeline</h2>
+    <div class="run-instructions">
+      <div class="instruction-step">
+        <div class="inst-num">1</div>
+        <div>
+          <h4>Download data files</h4>
+          <code class="code-block">cd backend/scripts&#10;./download_icd10cm.ps1&#10;./download_hcc.ps1&#10;./download_hcpcs.ps1&#10;./download_snomed.ps1&#10;./download_cpt.ps1&#10;./download_rxnorm.ps1&#10;./download_ndc.ps1</code>
+        </div>
+      </div>
+      <div class="instruction-step">
+        <div class="inst-num">2</div>
+        <div>
+          <h4>Run the pipeline</h4>
+          <code class="code-block">python -m backend.pipeline.process_data</code>
+          <p>This creates/re-creates <code>backend/data/coding_manager.db</code> with all tables, data, and mappings.</p>
+        </div>
+      </div>
+      <div class="instruction-step">
+        <div class="inst-num">3</div>
+        <div>
+          <h4>Start the application</h4>
+          <code class="code-block">./start.ps1</code>
+          <p>Or manually start Flask (port 5000) and Angular (port 4200) separately.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="back-link">
+    <a routerLink="/">← Back to Dashboard</a>
+  </div>
+</div>

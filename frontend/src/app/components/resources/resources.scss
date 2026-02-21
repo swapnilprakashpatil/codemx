@@ -1,0 +1,33 @@
+:host { display: block; }
+.resources-page {
+  padding: 1.5rem 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease;
+}
+.resources-sections { display: flex; flex-direction: column; gap: 2rem; }
+.resource-section {
+  h2 { border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+}
+.resource-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.resource-card {
+  background: var(--surface);
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.25s, transform 0.2s;
+  animation: cardEntry 0.3s ease backwards;
+  h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+  p { font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 0.75rem; }
+  &:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+}
+.resource-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  &:hover { text-decoration: underline; }
+}

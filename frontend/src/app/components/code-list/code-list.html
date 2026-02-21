@@ -1,0 +1,204 @@
+<div class="code-list-page">
+  <div class="page-header">
+    <h1>{{ codeTypeName }} Codes</h1>
+    @if (isIcd10) {
+      <button class="btn-toggle-view" (click)="toggleView()">
+        {{ hierarchyMode ? '⊞ Flat View' : '⊟ Hierarchy View' }}
+      </button>
+    }
+  </div>
+
+  <!-- A-Z Letter Bar (ICD-10 hierarchy mode only) -->
+  @if (isIcd10 && hierarchyMode) {
+    <div class="letter-bar">
+      @for (letter of alphabet; track letter) {
+        <button class="letter-btn" [class.active]="activeLetter === letter"
+                (click)="filterByLetter(letter)">{{ letter }}</button>
+      }
+      @if (activeLetter) {
+        <button class="letter-btn letter-clear" (click)="filterByLetter('')">All</button>
+      }
+    </div>
+  }
+
+  <!-- Search & Controls Bar -->
+  <div class="controls-bar">
+    <div class="search-bar compact">
+      <input class="search-input" type="text" placeholder="Search {{ codeTypeName }} by code or description..."
+             [(ngModel)]="searchQuery" (keyup.enter)="onSearch()">
+      <button class="btn-search" (click)="onSearch()">Search</button>
+    </div>
+    @if (searchQuery) {
+      <button class="btn-clear-search" (click)="clearSearch()" title="Clear search">&times;</button>
+    }
+    <div class="per-page-select">
+      <label>Show</label>
+      <select [(ngModel)]="perPage" (change)="onPerPageChange()" title="Results per page">
+        @for (opt of perPageOptions; track opt) {
+          <option [value]="opt">{{ opt }}</option>
+        }
+      </select>
+    </div>
+    @if (isIcd10 && hierarchyMode && chapters.length > 0) {
+      <div class="expand-controls">
+        <button class="btn-expand" (click)="expandAll()">Expand All</button>
+        <button class="btn-expand" (click)="collapseAll()">Collapse All</button>
+      </div>
+    }
+  </div>
+
+  @if (searchQuery && !loading) {
+    <div class="active-filter">
+      <span>Filtered by: <strong>"{{ searchQuery }}"</strong></span>
+      @if (activeLetter) {
+        <span>&nbsp;· Letter: <strong>{{ activeLetter }}</strong></span>
+      }
+      <span class="filter-count">{{ total | number }} result{{ total !== 1 ? 's' : '' }}</span>
+    </div>
+  }
+
+  @if (loading) {
+    <div class="loading">Loading codes...</div>
+  }
+
+  <!-- ─── MULTI-LEVEL HIERARCHY VIEW (ICD-10 only) ─── -->
+  @if (!loading && isIcd10 && hierarchyMode) {
+    @if (chapters.length > 0) {
+      <div class="results-info">
+        <span>{{ chapters.length }} chapter{{ chapters.length !== 1 ? 's' : '' }} · {{ total | number }} categories</span>
+      </div>
+
+      <div class="hierarchy-list">
+        @for (chapter of chapters; track chapter.id) {
+          <!-- LEVEL 1: Chapter -->
+          <div class="chapter-group" [class.expanded]="isChapterExpanded(chapter.id)">
+            <div class="chapter-header" (click)="toggleChapter(chapter.id)">
+              <span class="expand-icon">{{ isChapterExpanded(chapter.id) ? '▾' : '▸' }}</span>
+              <span class="chapter-range">{{ chapter.range }}</span>
+              <span class="chapter-name">{{ chapter.name }}</span>
+              <span class="child-count">{{ chapter.category_count }}</span>
+            </div>
+
+            @if (isChapterExpanded(chapter.id)) {
+              <div class="chapter-categories">
+                @for (cat of chapter.categories; track cat.code) {
+                  <!-- LEVEL 2: Category (3-char code) -->
+                  <div class="category-group" [class.expanded]="isCategoryExpanded(cat.code)">
+                    <div class="category-header" (click)="toggleCategory(cat.code)">
+                      <span class="expand-icon">{{ cat.child_count > 0 ? (isCategoryExpanded(cat.code) ? '▾' : '▸') : '·' }}</span>
+                      <span class="parent-code" [appTooltip]="cat.code + ' – ' + cat.description">{{ cat.code }}</span>
+                      <span class="parent-desc">{{ cat.description }}</span>
+                      @if (cat.child_count > 0) {
+                        <span class="child-count">{{ cat.child_count }}</span>
+                      }
+                      <a class="btn-view-inline" title="View details" (click)="$event.stopPropagation(); viewCode({code: cat.code, code_type: 'ICD-10-CM'})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+                    </div>
+
+                    @if (isCategoryExpanded(cat.code) && getCategoryChildren(cat.code).length > 0) {
+                      <div class="subcode-tree">
+                        <ng-container *ngTemplateOutlet="subcodeTreeTpl; context: { $implicit: getCategoryChildren(cat.code), depth: 1 }"></ng-container>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    @if (chapters.length === 0) {
+      <div class="no-results">
+        @if (searchQuery || activeLetter) {
+          <p>No ICD-10-CM categories found{{ activeLetter ? ' for letter ' + activeLetter : '' }}{{ searchQuery ? ' matching "' + searchQuery + '"' : '' }}.</p>
+          <button class="btn-primary" (click)="clearSearch(); activeLetter = ''">Clear Filters</button>
+        } @else {
+          <p>No ICD-10-CM codes found. Make sure the data pipeline has been run.</p>
+        }
+      </div>
+    }
+  }
+
+  <!-- ─── FLAT TABLE VIEW (all code types, or ICD-10 flat mode) ─── -->
+  @if (!loading && !(isIcd10 && hierarchyMode) && items.length > 0) {
+    <div class="results-info">
+      <span>Showing {{ startItem }}–{{ endItem }} of {{ total | number }} codes</span>
+    </div>
+
+    <table class="codes-table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items; track item.code) {
+          <tr>
+            <td class="code-cell" [appTooltip]="item.code + ' – ' + getDescription(item)">{{ item.code }}</td>
+            <td>{{ getDescription(item) }}</td>
+            <td>
+              <a (click)="viewCode(item)" class="btn-view" title="View details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (!loading && !(isIcd10 && hierarchyMode) && items.length === 0) {
+    <div class="no-results">
+      @if (searchQuery) {
+        <p>No {{ codeTypeName }} codes matching "{{ searchQuery }}".</p>
+        <button class="btn-primary" (click)="clearSearch()">Clear Search</button>
+      } @else {
+        <p>No {{ codeTypeName }} codes found.</p>
+        <p>Make sure the data pipeline has been run to populate the database.</p>
+      }
+    </div>
+  }
+
+  <!-- Pagination (shared) -->
+  @if (!loading && totalPages > 1) {
+    <div class="pagination">
+      <button (click)="goToPage(1)" [disabled]="currentPage <= 1" class="btn-page" title="First">&laquo;</button>
+      <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage <= 1" class="btn-page">Previous</button>
+      <span class="page-info">Page {{ currentPage }} of {{ totalPages | number }}</span>
+      <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage >= totalPages" class="btn-page">Next</button>
+      <button (click)="goToPage(totalPages)" [disabled]="currentPage >= totalPages" class="btn-page" title="Last">&raquo;</button>
+      <div class="page-jump">
+        <input type="text" placeholder="Go to..." [(ngModel)]="goToPageInput" (keyup.enter)="jumpToPage()" class="page-jump-input">
+        <button class="btn-page" (click)="jumpToPage()">Go</button>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Recursive subcode tree template -->
+<ng-template #subcodeTreeTpl let-nodes let-depth="depth">
+  @for (node of nodes; track node.code) {
+    <div class="subcode-node" [class]="'level-' + depth">
+      <div class="subcode-row" [class.has-children]="node.children.length > 0" [class.leaf]="node.children.length === 0"
+           (click)="node.children.length > 0 ? toggleSubcode(node.code) : null">
+        <span class="tree-connector">{{ getTreeConnector(depth) }}</span>
+        @if (node.children.length > 0) {
+          <span class="expand-icon small">{{ isSubcodeExpanded(node.code) ? '▾' : '▸' }}</span>
+        }
+        <span class="child-code" [appTooltip]="node.code + ' – ' + node.description">{{ node.code }}</span>
+        <span class="child-desc">{{ node.description }}</span>
+        @if (node.children.length > 0) {
+          <span class="child-count tiny">{{ node.children.length }}</span>
+        }
+        <a class="btn-view-inline" title="View details" (click)="$event.stopPropagation(); viewCode({code: node.code, code_type: 'ICD-10-CM'})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+      </div>
+
+      @if (isSubcodeExpanded(node.code) && node.children.length > 0) {
+        <div class="subcode-children">
+          <ng-container *ngTemplateOutlet="subcodeTreeTpl; context: { $implicit: node.children, depth: depth + 1 }"></ng-container>
+        </div>
+      }
+    </div>
+  }
+</ng-template>

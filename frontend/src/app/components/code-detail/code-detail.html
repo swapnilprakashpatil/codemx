@@ -1,0 +1,691 @@
+<div class="code-detail-page">
+  @if (loading) {
+    <div class="loading">Loading code details...</div>
+  }
+
+  @if (codeItem) {
+    <div class="detail-header">
+      <a (click)="goBack()" class="btn-back">&larr; Back</a>
+      <span class="badge" [class]="'badge-' + codeType">{{ codeType | uppercase }}</span>
+      <h1>{{ codeItem.code }}</h1>
+      @if (codeItem.is_header) {
+        <span class="header-badge">Header</span>
+      }
+    </div>
+
+    <div class="detail-body">
+      <div class="detail-section">
+        <h2>Description</h2>
+        <p class="description">{{ codeItem.description || codeItem.long_description || codeItem.short_description }}</p>
+      </div>
+
+      <!-- ═══════════ SNOMED CT Properties ═══════════ -->
+      @if (codeItem.code_type === 'SNOMED') {
+        <div class="detail-section system-properties snomed-properties">
+          <h2>SNOMED CT Properties</h2>
+          <div class="properties-grid">
+            @if (codeItem.fully_specified_name) {
+              <div class="prop-item" style="grid-column: 1 / -1;">
+                <span class="prop-label">Fully Specified Name</span>
+                <span class="prop-value">{{ codeItem.fully_specified_name }}</span>
+              </div>
+            }
+            @if (codeItem.semantic_tag) {
+              <div class="prop-item">
+                <span class="prop-label">Semantic Tag</span>
+                <span class="prop-value"><span class="semantic-tag-pill">{{ codeItem.semantic_tag }}</span></span>
+              </div>
+            }
+            @if (codeItem.module_id) {
+              <div class="prop-item">
+                <span class="prop-label">Module ID</span>
+                <span class="prop-value monospace">{{ codeItem.module_id }}</span>
+              </div>
+            }
+            @if (codeItem.effective_date) {
+              <div class="prop-item">
+                <span class="prop-label">Effective Date</span>
+                <span class="prop-value">{{ codeItem.effective_date }}</span>
+              </div>
+            }
+            <div class="prop-item">
+              <span class="prop-label">Status</span>
+              <span class="prop-value">
+                <span class="status-pill" [class.active]="codeItem.active" [class.inactive]="!codeItem.active">
+                  {{ codeItem.active ? 'Active' : 'Inactive' }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ═══════════ ICD-10-CM Properties ═══════════ -->
+      @if (codeItem.code_type === 'ICD-10-CM') {
+        <div class="detail-section system-properties icd10-properties">
+          <h2>ICD-10-CM Properties</h2>
+          <div class="properties-grid">
+            @if (codeItem.short_description && codeItem.short_description !== codeItem.description) {
+              <div class="prop-item">
+                <span class="prop-label">Short Description</span>
+                <span class="prop-value">{{ codeItem.short_description }}</span>
+              </div>
+            }
+            @if (codeItem.chapter) {
+              <div class="prop-item">
+                <span class="prop-label">Chapter</span>
+                <span class="prop-value">{{ codeItem.chapter }}</span>
+              </div>
+            }
+            @if (codeItem.category) {
+              <div class="prop-item">
+                <span class="prop-label">Category</span>
+                <span class="prop-value monospace">{{ codeItem.category }}</span>
+              </div>
+            }
+            <div class="prop-item">
+              <span class="prop-label">Code Type</span>
+              <span class="prop-value">
+                @if (codeItem.is_header) {
+                  <span class="header-badge">Header/Category</span>
+                } @else {
+                  <span class="status-pill active">Billable Code</span>
+                }
+              </span>
+            </div>
+            <div class="prop-item">
+              <span class="prop-label">Status</span>
+              <span class="prop-value">
+                <span class="status-pill" [class.active]="codeItem.active" [class.inactive]="!codeItem.active">
+                  {{ codeItem.active ? 'Active' : 'Inactive' }}
+                </span>
+              </span>
+            </div>
+            @if (codeItem.effective_date) {
+              <div class="prop-item">
+                <span class="prop-label">Effective Date</span>
+                <span class="prop-value">{{ codeItem.effective_date }}</span>
+              </div>
+            }
+          </div>
+          <!-- ICD-10 External Reference iframe -->
+          @if (icd10IframeUrl) {
+            <div class="icd10-iframe-container">
+              <iframe 
+                [src]="icd10IframeUrl" 
+                frameborder="0"
+                class="icd10-iframe"
+                title="ICD-10 Code Reference">
+              </iframe>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ═══════════ HCC Properties ═══════════ -->
+      @if (codeItem.code_type === 'HCC') {
+        <div class="detail-section system-properties hcc-properties">
+          <h2>HCC Risk Adjustment Properties</h2>
+          <div class="properties-grid">
+            @if (codeItem.category) {
+              <div class="prop-item">
+                <span class="prop-label">Category Group</span>
+                <span class="prop-value">{{ codeItem.category }}</span>
+              </div>
+            }
+            @if (codeItem.coefficient) {
+              <div class="prop-item">
+                <span class="prop-label">Risk Coefficient</span>
+                <span class="prop-value coefficient-value">{{ codeItem.coefficient }}</span>
+              </div>
+            }
+            @if (codeItem.model_version) {
+              <div class="prop-item">
+                <span class="prop-label">Model Version</span>
+                <span class="prop-value"><span class="badge badge-hcc badge-sm">{{ codeItem.model_version }}</span></span>
+              </div>
+            }
+            @if (codeItem.payment_year) {
+              <div class="prop-item">
+                <span class="prop-label">Payment Year</span>
+                <span class="prop-value">{{ codeItem.payment_year }}</span>
+              </div>
+            }
+            <div class="prop-item">
+              <span class="prop-label">Status</span>
+              <span class="prop-value">
+                <span class="status-pill" [class.active]="codeItem.active" [class.inactive]="!codeItem.active">
+                  {{ codeItem.active ? 'Active' : 'Inactive' }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ═══════════ CPT Properties ═══════════ -->
+      @if (codeItem.code_type === 'CPT') {
+        <div class="detail-section system-properties cpt-properties">
+          <h2>CPT Code Properties</h2>
+          <div class="properties-grid">
+            @if (codeItem.short_description) {
+              <div class="prop-item">
+                <span class="prop-label">Short Description</span>
+                <span class="prop-value">{{ codeItem.short_description }}</span>
+              </div>
+            }
+            @if (codeItem.long_description && codeItem.long_description !== codeItem.short_description) {
+              <div class="prop-item" style="grid-column: 1 / -1;">
+                <span class="prop-label">Long Description</span>
+                <span class="prop-value">{{ codeItem.long_description }}</span>
+              </div>
+            }
+            @if (codeItem.category) {
+              <div class="prop-item">
+                <span class="prop-label">Category</span>
+                <span class="prop-value">{{ codeItem.category }}</span>
+              </div>
+            }
+            @if (codeItem.dhs_category) {
+              <div class="prop-item">
+                <span class="prop-label">DHS Category</span>
+                <span class="prop-value"><span class="dhs-badge">{{ codeItem.dhs_category }}</span></span>
+              </div>
+            }
+            @if (codeItem.status) {
+              <div class="prop-item">
+                <span class="prop-label">Status</span>
+                <span class="prop-value">
+                  <span class="status-pill" [class.active]="codeItem.status === 'Active'" [class.inactive]="codeItem.status !== 'Active'">
+                    {{ codeItem.status }}
+                  </span>
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ═══════════ HCPCS Properties ═══════════ -->
+      @if (codeItem.code_type === 'HCPCS') {
+        <div class="detail-section system-properties hcpcs-properties">
+          <h2>HCPCS Code Properties</h2>
+          <div class="properties-grid">
+            @if (codeItem.short_description) {
+              <div class="prop-item">
+                <span class="prop-label">Short Description</span>
+                <span class="prop-value">{{ codeItem.short_description }}</span>
+              </div>
+            }
+            @if (codeItem.long_description && codeItem.long_description !== codeItem.short_description) {
+              <div class="prop-item" style="grid-column: 1 / -1;">
+                <span class="prop-label">Long Description</span>
+                <span class="prop-value">{{ codeItem.long_description }}</span>
+              </div>
+            }
+            @if (codeItem.category) {
+              <div class="prop-item">
+                <span class="prop-label">Category</span>
+                <span class="prop-value">{{ codeItem.category }}</span>
+              </div>
+            }
+            @if (codeItem.dhs_category) {
+              <div class="prop-item">
+                <span class="prop-label">DHS Category</span>
+                <span class="prop-value"><span class="dhs-badge">{{ codeItem.dhs_category }}</span></span>
+              </div>
+            }
+            @if (codeItem.status) {
+              <div class="prop-item">
+                <span class="prop-label">Status</span>
+                <span class="prop-value">
+                  <span class="status-pill" [class.active]="codeItem.status === 'Active'" [class.inactive]="codeItem.status !== 'Active'">
+                    {{ codeItem.status }}
+                  </span>
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ═══════════ RxNorm Properties ═══════════ -->
+      @if (codeItem.code_type === 'RxNorm') {
+        <div class="detail-section rxnorm-properties">
+          <h2>Drug Properties</h2>
+          <div class="properties-grid">
+            @if (codeItem.term_type_label) {
+              <div class="prop-item">
+                <span class="prop-label">Term Type</span>
+                <span class="prop-value">
+                  <span class="badge badge-rxnorm badge-sm">{{ codeItem.term_type }}</span>
+                  {{ codeItem.term_type_label }}
+                </span>
+              </div>
+            }
+            @if (codeItem.rxterm_form) {
+              <div class="prop-item">
+                <span class="prop-label">Dose Form</span>
+                <span class="prop-value">{{ codeItem.rxterm_form }}</span>
+              </div>
+            }
+            @if (codeItem.available_strength) {
+              <div class="prop-item">
+                <span class="prop-label">Available Strengths</span>
+                <span class="prop-value">{{ codeItem.available_strength }}</span>
+              </div>
+            }
+            @if (codeItem.strength && codeItem.strength !== codeItem.available_strength) {
+              <div class="prop-item">
+                <span class="prop-label">Strength</span>
+                <span class="prop-value">{{ codeItem.strength }}</span>
+              </div>
+            }
+            <div class="prop-item">
+              <span class="prop-label">Status</span>
+              <span class="prop-value">
+                <span class="status-pill" [class.active]="codeItem.active" [class.inactive]="!codeItem.active">
+                  {{ codeItem.active ? 'Active' : 'Inactive' }}
+                </span>
+              </span>
+            </div>
+            @if (codeItem.bn_cardinality) {
+              <div class="prop-item">
+                <span class="prop-label">Brand Cardinality</span>
+                <span class="prop-value">{{ codeItem.bn_cardinality }}</span>
+              </div>
+            }
+            @if (codeItem.quantity) {
+              <div class="prop-item">
+                <span class="prop-label">Quantity</span>
+                <span class="prop-value">{{ codeItem.quantity }}</span>
+              </div>
+            }
+            @if (codeItem.qualitative_distinction) {
+              <div class="prop-item">
+                <span class="prop-label">Qualitative Distinction</span>
+                <span class="prop-value">{{ codeItem.qualitative_distinction }}</span>
+              </div>
+            }
+            @if (codeItem.human_drug !== null && codeItem.human_drug !== undefined) {
+              <div class="prop-item">
+                <span class="prop-label">Drug Classification</span>
+                <span class="prop-value drug-class-badges">
+                  @if (codeItem.human_drug) {
+                    <span class="drug-badge human">Human</span>
+                  }
+                  @if (codeItem.vet_drug) {
+                    <span class="drug-badge vet">Veterinary</span>
+                  }
+                  @if (!codeItem.human_drug && !codeItem.vet_drug) {
+                    <span class="drug-badge">Unclassified</span>
+                  }
+                </span>
+              </div>
+            }
+            @if (codeItem.suppress) {
+              <div class="prop-item">
+                <span class="prop-label">Suppress Flag</span>
+                <span class="prop-value monospace">{{ codeItem.suppress }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ═══════════ NDC Properties ═══════════ -->
+      @if (codeItem.code_type === 'NDC') {
+        <div class="detail-section system-properties ndc-properties">
+          <h2>NDC Drug Properties</h2>
+          <div class="properties-grid">
+            @if (codeItem.proprietary_name) {
+              <div class="prop-item">
+                <span class="prop-label">Brand Name</span>
+                <span class="prop-value"><strong>{{ codeItem.proprietary_name }}</strong></span>
+              </div>
+            }
+            @if (codeItem.non_proprietary_name) {
+              <div class="prop-item">
+                <span class="prop-label">Generic Name</span>
+                <span class="prop-value">{{ codeItem.non_proprietary_name }}</span>
+              </div>
+            }
+            @if (codeItem.product_ndc) {
+              <div class="prop-item">
+                <span class="prop-label">Product NDC</span>
+                <span class="prop-value monospace">{{ codeItem.product_ndc }}</span>
+              </div>
+            }
+            @if (codeItem.package_ndc) {
+              <div class="prop-item">
+                <span class="prop-label">Package NDC</span>
+                <span class="prop-value monospace">{{ codeItem.package_ndc }}</span>
+              </div>
+            }
+            @if (codeItem.strength) {
+              <div class="prop-item">
+                <span class="prop-label">Strength</span>
+                <span class="prop-value">{{ codeItem.strength }}</span>
+              </div>
+            }
+            @if (codeItem.dosage_form) {
+              <div class="prop-item">
+                <span class="prop-label">Dosage Form</span>
+                <span class="prop-value">{{ codeItem.dosage_form }}</span>
+              </div>
+            }
+            @if (codeItem.route) {
+              <div class="prop-item">
+                <span class="prop-label">Route of Administration</span>
+                <span class="prop-value">{{ codeItem.route }}</span>
+              </div>
+            }
+            @if (codeItem.active_ingredient) {
+              <div class="prop-item" style="grid-column: 1 / -1;">
+                <span class="prop-label">Active Ingredient(s)</span>
+                <span class="prop-value">{{ codeItem.active_ingredient }}</span>
+              </div>
+            }
+            @if (codeItem.labeler_name) {
+              <div class="prop-item" style="grid-column: 1 / -1;">
+                <span class="prop-label">Labeler / Manufacturer</span>
+                <span class="prop-value">{{ codeItem.labeler_name }}</span>
+              </div>
+            }
+            @if (codeItem.product_type) {
+              <div class="prop-item">
+                <span class="prop-label">Product Type</span>
+                <span class="prop-value"><span class="badge badge-ndc badge-sm">{{ codeItem.product_type }}</span></span>
+              </div>
+            }
+            @if (codeItem.marketing_category) {
+              <div class="prop-item">
+                <span class="prop-label">Marketing Category</span>
+                <span class="prop-value">{{ codeItem.marketing_category }}</span>
+              </div>
+            }
+            @if (codeItem.application_number) {
+              <div class="prop-item">
+                <span class="prop-label">Application Number</span>
+                <span class="prop-value monospace">{{ codeItem.application_number }}</span>
+              </div>
+            }
+            @if (codeItem.dea_schedule) {
+              <div class="prop-item">
+                <span class="prop-label">DEA Schedule</span>
+                <span class="prop-value"><span class="dea-schedule-badge">{{ codeItem.dea_schedule }}</span></span>
+              </div>
+            }
+            @if (codeItem.listing_record_certified_through) {
+              <div class="prop-item">
+                <span class="prop-label">Certified Through</span>
+                <span class="prop-value">{{ codeItem.listing_record_certified_through }}</span>
+              </div>
+            }
+            <div class="prop-item">
+              <span class="prop-label">Status</span>
+              <span class="prop-value">
+                <span class="status-pill" [class.active]="codeItem.active" [class.inactive]="!codeItem.active">
+                  {{ codeItem.active ? 'Active' : 'Inactive' }}
+                </span>
+              </span>
+            </div>
+            @if (codeItem.ndc_exclude_flag && codeItem.ndc_exclude_flag === 'Y') {
+              <div class="prop-item">
+                <span class="prop-label">Exclusion Flag</span>
+                <span class="prop-value">
+                  <span class="status-pill inactive">Excluded</span>
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- NDC Codes -->
+      @if (codeItem.ndc_codes && codeItem.ndc_codes.length > 0) {
+        <div class="detail-section ndc-section">
+          <h2>NDC Codes <span class="count-badge">{{ codeItem.ndc_codes.length }}</span></h2>
+          <div class="ndc-grid">
+            @for (ndc of codeItem.ndc_codes; track ndc) {
+              <span class="ndc-chip">{{ ndc }}</span>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- RxNorm Ingredients -->
+      @if (codeItem.ingredients && codeItem.ingredients.length > 0) {
+        <div class="detail-section">
+          <h2>Ingredients</h2>
+          <div class="mappings-list">
+            @for (m of codeItem.ingredients; track m.code) {
+              <a (click)="navigateToCode('RxNorm', m.code)" class="mapping-card">
+                <span class="badge badge-rxnorm">IN</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- RxNorm Brand Names -->
+      @if (codeItem.brand_names && codeItem.brand_names.length > 0) {
+        <div class="detail-section">
+          <h2>Brand Names</h2>
+          <div class="mappings-list">
+            @for (m of codeItem.brand_names; track m.code) {
+              <a (click)="navigateToCode('RxNorm', m.code)" class="mapping-card">
+                <span class="badge badge-rxnorm">BN</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- RxNorm Dose Forms -->
+      @if (codeItem.dose_forms && codeItem.dose_forms.length > 0) {
+        <div class="detail-section">
+          <h2>Dose Forms</h2>
+          <div class="mappings-list">
+            @for (m of codeItem.dose_forms; track m.code) {
+              <a (click)="navigateToCode('RxNorm', m.code)" class="mapping-card">
+                <span class="badge badge-rxnorm">DF</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- RxNorm: Drugs containing this ingredient -->
+      @if (codeItem.contained_in && codeItem.contained_in.length > 0) {
+        <div class="detail-section">
+          <h2>Contained In (Drugs)</h2>
+          <div class="mappings-list">
+            @for (m of codeItem.contained_in; track m.code) {
+              <a (click)="navigateToCode('RxNorm', m.code)" class="mapping-card">
+                <span class="badge badge-rxnorm">{{ m.term_type || 'RX' }}</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- RxNorm: Brands of this ingredient -->
+      @if (codeItem.brand_of && codeItem.brand_of.length > 0) {
+        <div class="detail-section">
+          <h2>Brand Products</h2>
+          <div class="mappings-list">
+            @for (m of codeItem.brand_of; track m.code) {
+              <a (click)="navigateToCode('RxNorm', m.code)" class="mapping-card">
+                <span class="badge badge-rxnorm">{{ m.term_type || 'SBD' }}</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- RxNorm Other Related Concepts -->
+      @if (codeItem.related_concepts && codeItem.related_concepts.length > 0) {
+        <div class="detail-section">
+          <h2>Related Concepts</h2>
+          <div class="mappings-list">
+            @for (m of codeItem.related_concepts; track m.code) {
+              <a (click)="navigateToCode('RxNorm', m.code)" class="mapping-card">
+                <span class="badge badge-rxnorm">{{ m.term_type || 'RX' }}</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description }}</span>
+                @if (m.relationship) {
+                  <span class="mapping-rel">{{ m.relationship }}</span>
+                }
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ═══════════ Cross-System Mappings ═══════════ -->
+
+      @if (codeItem.icd10_mappings && codeItem.icd10_mappings.length > 0) {
+        <div class="detail-section">
+          <h2>ICD-10-CM Mappings <span class="count-badge icd10">{{ codeItem.icd10_mappings.length }}</span></h2>
+          <div class="mappings-list">
+            @for (m of codeItem.icd10_mappings; track m.code) {
+              <a (click)="navigateToCode('ICD-10-CM', m.code)" class="mapping-card">
+                <span class="badge badge-icd10">ICD-10-CM</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description }}</span>
+                @if (m.map_advice) {
+                  <span class="mapping-meta" [appTooltip]="m.map_advice">{{ m.map_advice }}</span>
+                }
+                @if (m.map_rule) {
+                  <span class="mapping-meta" [appTooltip]="'Rule: ' + m.map_rule">{{ m.map_rule }}</span>
+                }
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      @if (codeItem.hcc_mappings && codeItem.hcc_mappings.length > 0) {
+        <div class="detail-section">
+          <h2>HCC Mappings <span class="count-badge hcc">{{ codeItem.hcc_mappings.length }}</span></h2>
+          <div class="mappings-list">
+            @for (m of codeItem.hcc_mappings; track m.code) {
+              <a (click)="navigateToCode('HCC', m.code)" class="mapping-card">
+                <span class="badge badge-hcc">HCC</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description }}</span>
+                @if (m.coefficient) {
+                  <span class="mapping-coeff">{{ m.coefficient }}</span>
+                }
+                @if (m.via_icd10_code) {
+                  <span class="mapping-via">via {{ m.via_icd10_code }}</span>
+                }
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      @if (codeItem.snomed_mappings && codeItem.snomed_mappings.length > 0) {
+        <div class="detail-section">
+          <h2>SNOMED Mappings <span class="count-badge snomed">{{ codeItem.snomed_mappings.length }}</span></h2>
+          <div class="mappings-list">
+            @for (m of codeItem.snomed_mappings; track m.code) {
+              <a (click)="navigateToCode('SNOMED', m.code)" class="mapping-card">
+                <span class="badge badge-snomed">SNOMED</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description }}</span>
+                @if (m.semantic_tag) {
+                  <span class="mapping-rel">{{ m.semantic_tag }}</span>
+                }
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      @if (codeItem.cpt_mappings && codeItem.cpt_mappings.length > 0) {
+        <div class="detail-section">
+          <h2>CPT Mappings <span class="count-badge cpt">{{ codeItem.cpt_mappings.length }}</span></h2>
+          <div class="mappings-list">
+            @for (m of codeItem.cpt_mappings; track m.code) {
+              <a (click)="navigateToCode('CPT', m.code)" class="mapping-card">
+                <span class="badge badge-cpt">CPT</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || m.short_description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description || m.short_description }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      @if (codeItem.hcpcs_mappings && codeItem.hcpcs_mappings.length > 0) {
+        <div class="detail-section">
+          <h2>HCPCS Mappings <span class="count-badge hcpcs">{{ codeItem.hcpcs_mappings.length }}</span></h2>
+          <div class="mappings-list">
+            @for (m of codeItem.hcpcs_mappings; track m.code) {
+              <a (click)="navigateToCode('HCPCS', m.code)" class="mapping-card">
+                <span class="badge badge-hcpcs">HCPCS</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || m.short_description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description || m.short_description }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      @if (codeItem.rxnorm_mappings && codeItem.rxnorm_mappings.length > 0) {
+        <div class="detail-section">
+          <h2>RxNorm Mappings <span class="count-badge rxnorm">{{ codeItem.rxnorm_mappings.length }}</span></h2>
+          <div class="mappings-list">
+            @for (m of codeItem.rxnorm_mappings; track m.code) {
+              <a (click)="navigateToCode('RxNorm', m.code)" class="mapping-card">
+                <span class="badge badge-rxnorm">{{ m.term_type || 'RX' }}</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.description }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+
+      @if (codeItem.ndc_mappings && codeItem.ndc_mappings.length > 0) {
+        <div class="detail-section">
+          <h2>NDC Mappings <span class="count-badge ndc">{{ codeItem.ndc_mappings.length }}</span></h2>
+          <div class="mappings-list">
+            @for (m of codeItem.ndc_mappings; track m.code) {
+              <a (click)="navigateToCode('NDC', m.code)" class="mapping-card">
+                <span class="badge badge-ndc">NDC</span>
+                <span class="mapping-code" [appTooltip]="m.code + ' – ' + (m.product_name || m.description || '')">{{ m.code }}</span>
+                <span class="mapping-desc">{{ m.product_name || m.description }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (error) {
+    <div class="error-message">
+      <p>{{ error }}</p>
+    </div>
+  }
+
+  @if (!loading && !codeItem && !error) {
+    <div class="no-results">
+      <p>Code not found.</p>
+    </div>
+  }
+</div>

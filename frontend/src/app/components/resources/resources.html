@@ -1,0 +1,68 @@
+<div class="resources-page">
+  <h1>Coding Resources</h1>
+
+  @if (loading) {
+    <div class="loading">Loading resources...</div>
+  }
+
+  @if (!loading) {
+    <div class="resources-sections">
+      @if (guidelines.length > 0) {
+        <section class="resource-section">
+          <h2>Coding Guidelines</h2>
+          <div class="resource-list">
+            @for (item of guidelines; track item.title) {
+              <div class="resource-card">
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.description }}</p>
+                @if (item.url) {
+                  <a [href]="item.url" target="_blank" rel="noopener" class="resource-link">Learn More &rarr;</a>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (training.length > 0) {
+        <section class="resource-section">
+          <h2>Training Materials</h2>
+          <div class="resource-list">
+            @for (item of training; track item.title) {
+              <div class="resource-card">
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.description }}</p>
+                @if (item.url) {
+                  <a [href]="item.url" target="_blank" rel="noopener" class="resource-link">Access &rarr;</a>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (updates.length > 0) {
+        <section class="resource-section">
+          <h2>Recent Updates</h2>
+          <div class="resource-list">
+            @for (item of updates; track item.title) {
+              <div class="resource-card">
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.description }}</p>
+                @if (item.url) {
+                  <a [href]="item.url" target="_blank" rel="noopener" class="resource-link">Read More &rarr;</a>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (guidelines.length === 0 && training.length === 0 && updates.length === 0) {
+        <div class="no-results">
+          <p>No resources available. Make sure the backend API is running.</p>
+        </div>
+      }
+    </div>
+  }
+</div>

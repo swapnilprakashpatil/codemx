@@ -1,0 +1,105 @@
+<div class="mapping-view-page">
+  <h1>Code Mappings</h1>
+
+  <div class="mapping-controls">
+    <div class="mapping-type-select">
+      <label>Mapping Type:</label>
+      <select [(ngModel)]="mappingType">
+        @for (mt of mappingTypes; track mt.value) {
+          <option [value]="mt.value">{{ mt.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="code-input">
+      <label>Source Code:</label>
+      <div class="search-bar-wrapper">
+        <div class="search-bar">
+          <input
+            type="text"
+            [(ngModel)]="sourceCode"
+            (ngModelChange)="onInputChange()"
+            (keyup.enter)="onLookup()"
+            (keydown)="onKeyDown($event)"
+            placeholder="Enter source code..."
+            class="search-input"
+            autocomplete="off"
+          />
+          <button (click)="onLookup()" class="btn-search">Lookup</button>
+        </div>
+
+        @if (showSuggestions && suggestions.length > 0) {
+          <div class="autocomplete-dropdown">
+            @for (item of suggestions; track item.code; let i = $index) {
+              <div
+                class="autocomplete-item"
+                [class.active]="i === activeSuggestionIndex"
+                (mousedown)="selectSuggestion(item)"
+                (mouseenter)="activeSuggestionIndex = i">
+                <span class="badge ac-badge" [class]="getCodeTypeBadgeClass(item.code_type)">{{ item.code_type }}</span>
+                <span class="ac-code" [appTooltip]="item.code + ' – ' + item.description">{{ item.code }}</span>
+                <span class="ac-desc">{{ item.description }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading">Looking up mappings...</div>
+  }
+
+  @if (searched && !loading) {
+    <!-- Visual Mapping Graph -->
+    @if (graphNodes.length > 0) {
+      <div class="mapping-graph-panel">
+        <div class="graph-header">
+          <h2>Visual Mapping Graph</h2>
+          <span class="graph-subtitle">{{ sourceInfo }}</span>
+        </div>
+
+        @if (graphLoading) {
+          <div class="loading">Loading graph...</div>
+        } @else {
+          <app-mapping-diagram
+            [nodes]="graphNodes"
+            [edges]="graphEdges"
+            [rootId]="graphRoot"
+            (nodeClick)="onGraphNodeClick($event)">
+          </app-mapping-diagram>
+        }
+      </div>
+    }
+
+    <!-- Table results -->
+    @if (results.length > 0) {
+      <div class="mapping-result">
+        <div class="source-code-info">
+          <h2>Source: {{ sourceInfo }}</h2>
+        </div>
+
+        <div class="mapping-arrow">&darr;</div>
+
+        <div class="target-codes">
+          <h2>Mapped To ({{ results.length }} results)</h2>
+          <div class="targets-list">
+            @for (target of results; track target.code) {
+              <a (click)="viewCode(target)" class="code-card target">
+                <span class="code-value" [appTooltip]="target.code + ' – ' + (target.description || target.short_description || '')">{{ target.code }}</span>
+                <span class="code-desc">{{ target.description || target.short_description }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (results.length === 0 && graphNodes.length === 0) {
+      <div class="no-results">
+        <p>No mappings found for code "{{ sourceInfo }}".</p>
+      </div>
+    }
+  }
+</div>

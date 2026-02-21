@@ -1,0 +1,29 @@
+:host { display: block; }
+.compare-page {
+  padding: 1.5rem 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease;
+}
+.compare-controls {
+  margin-bottom: 1.5rem;
+  .input-group {
+    label { display: block; margin-bottom: 0.25rem; font-size: 0.9rem; color: var(--text-secondary); }
+    display: flex; flex-direction: column; gap: 0.5rem;
+    .search-input { border-radius: var(--radius); max-width: 500px; }
+  }
+}
+.compare-results { margin-top: 1rem; }
+.not-found-section {
+  margin-top: 1.5rem;
+  background: rgba(255, 248, 225, 0.6);
+  padding: 1rem;
+  border-radius: var(--radius);
+  border-left: 4px solid var(--warning);
+  h3 { color: var(--warning); }
+  ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+}
+
+[data-theme="dark"] .not-found-section {
+  background: rgba(255, 167, 38, 0.1);
+}

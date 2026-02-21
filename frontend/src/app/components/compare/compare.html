@@ -1,0 +1,53 @@
+<div class="compare-page">
+  <h1>Compare Codes</h1>
+
+  <div class="compare-controls">
+    <div class="input-group">
+      <label>Enter codes to compare (comma-separated):</label>
+      <div class="search-bar">
+        <input
+          type="text"
+          [(ngModel)]="codesInput"
+          (keyup.enter)="onCompare()"
+          placeholder="e.g. E11.9, 44054006, HCC19"
+          class="search-input"
+        />
+        <button (click)="onCompare()" class="btn-search">Compare</button>
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading">Comparing codes...</div>
+  }
+
+  @if (compared && !loading && results.length > 0) {
+    <div class="compare-results">
+      <h2>Comparison Results</h2>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of results; track item.code) {
+            <tr>
+              <td class="code-cell" [appTooltip]="item.code + ' – ' + getDescription(item)">{{ item.code }}</td>
+              <td><span class="badge" [class]="'badge-' + item.code_type.toLowerCase()">{{ item.code_type }}</span></td>
+              <td>{{ getDescription(item) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (compared && !loading && results.length === 0) {
+    <div class="no-results">
+      <p>No codes found matching your input.</p>
+    </div>
+  }
+</div>

@@ -1,0 +1,336 @@
+/* ── Three-Column Layout with Sidebars ── */
+.app-layout {
+  display: block;
+  min-height: 100vh;
+  position: relative;
+  padding: 0 120px; /* Space for fixed sidebars */
+}
+
+.left-sidebar,
+.right-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 120px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.left-sidebar {
+  left: 0;
+}
+
+.right-sidebar {
+  right: 0;
+}
+
+.sidebar-graphics {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+.main-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  flex: 1;
+  transition: background-color 0.35s ease;
+  position: relative;
+}
+
+/* ── Medical SVG Base Styles ── */
+.med-svg {
+  position: absolute;
+  opacity: 0.12;
+  color: var(--primary);
+  pointer-events: none;
+}
+
+/* — LEFT Sidebar SVGs — */
+.med-stethoscope {
+  width: 80px;
+  top: 2%;
+  left: 15px;
+  transform: rotate(15deg);
+  animation: medFloat1 18s ease-in-out infinite;
+}
+
+.med-dna {
+  width: 55px;
+  top: 12%;
+  left: 25px;
+  transform: rotate(-10deg);
+  animation: medFloat3 20s ease-in-out infinite;
+}
+
+.med-heartbeat {
+  width: 110px;
+  top: 20%;
+  left: 5px;
+  opacity: 0.1;
+  animation: medFloat2 22s ease-in-out infinite;
+}
+
+.med-cross {
+  width: 60px;
+  top: 30%;
+  left: 20px;
+  opacity: 0.1;
+  animation: medFloat5 24s ease-in-out infinite;
+}
+
+.med-syringe {
+  width: 65px;
+  top: 40%;
+  left: 10px;
+  transform: rotate(40deg);
+  opacity: 0.1;
+  animation: medFloat2 19s ease-in-out infinite reverse;
+}
+
+.med-thermometer {
+  width: 50px;
+  top: 50%;
+  left: 30px;
+  transform: rotate(-15deg);
+  opacity: 0.1;
+  animation: medFloat3 23s ease-in-out infinite reverse;
+}
+
+.med-flask {
+  width: 55px;
+  top: 60%;
+  left: 15px;
+  transform: rotate(-8deg);
+  opacity: 0.1;
+  animation: medFloat4 21s ease-in-out infinite;
+}
+
+.med-mask {
+  width: 60px;
+  top: 70%;
+  left: 25px;
+  transform: rotate(5deg);
+  opacity: 0.1;
+  animation: medFloat5 19s ease-in-out infinite reverse;
+}
+
+.med-tooth {
+  width: 45px;
+  top: 80%;
+  left: 10px;
+  transform: rotate(-12deg);
+  opacity: 0.1;
+  animation: medFloat3 20s ease-in-out infinite;
+}
+
+.med-virus {
+  width: 55px;
+  top: 90%;
+  left: 30px;
+  opacity: 0.1;
+  animation: medFloat1 17s ease-in-out infinite;
+}
+
+.med-stethoscope2 {
+  width: 70px;
+  top: 47%;
+  left: 35px;
+  transform: rotate(-20deg) scaleX(-1);
+  opacity: 0.08;
+  animation: medFloat6 20s ease-in-out infinite;
+}
+
+/* — RIGHT Sidebar SVGs — */
+.med-pill {
+  width: 60px;
+  top: 3%;
+  right: 20px;
+  transform: rotate(25deg);
+  animation: medFloat4 16s ease-in-out infinite;
+}
+
+.med-microscope {
+  width: 75px;
+  top: 12%;
+  right: 10px;
+  transform: rotate(-8deg);
+  opacity: 0.1;
+  animation: medFloat6 19s ease-in-out infinite;
+}
+
+.med-clipboard {
+  width: 65px;
+  top: 21%;
+  right: 25px;
+  transform: rotate(5deg);
+  opacity: 0.1;
+  animation: medFloat1 21s ease-in-out infinite reverse;
+}
+
+.med-heart {
+  width: 60px;
+  top: 30%;
+  right: 15px;
+  opacity: 0.1;
+  animation: medFloat4 17s ease-in-out infinite;
+}
+
+.med-bandaid {
+  width: 65px;
+  top: 39%;
+  right: 28px;
+  transform: rotate(55deg);
+  opacity: 0.1;
+  animation: medFloat5 17s ease-in-out infinite reverse;
+}
+
+.med-rx {
+  width: 65px;
+  top: 48%;
+  right: 12px;
+  opacity: 0.1;
+  animation: medFloat6 21s ease-in-out infinite reverse;
+}
+
+.med-lungs {
+  width: 75px;
+  top: 57%;
+  right: 20px;
+  opacity: 0.08;
+  transform: rotate(5deg);
+  animation: medFloat1 25s ease-in-out infinite;
+}
+
+.med-dna2 {
+  width: 55px;
+  top: 66%;
+  right: 10px;
+  transform: rotate(12deg);
+  opacity: 0.1;
+  animation: medFloat3 18s ease-in-out infinite reverse;
+}
+
+.med-brain {
+  width: 65px;
+  top: 75%;
+  right: 25px;
+  transform: rotate(-5deg);
+  opacity: 0.1;
+  animation: medFloat2 23s ease-in-out infinite;
+}
+
+.med-chart {
+  width: 60px;
+  top: 84%;
+  right: 15px;
+  transform: rotate(8deg);
+  opacity: 0.1;
+  animation: medFloat5 22s ease-in-out infinite;
+}
+
+.med-firstaid {
+  width: 60px;
+  top: 93%;
+  right: 28px;
+  transform: rotate(-10deg);
+  opacity: 0.1;
+  animation: medFloat4 20s ease-in-out infinite reverse;
+}
+
+.med-badge {
+  width: 45px;
+  top: 54%;
+  right: 35px;
+  transform: rotate(12deg);
+  opacity: 0.1;
+  animation: medFloat3 19s ease-in-out infinite;
+}
+
+.med-pill2 {
+  width: 55px;
+  top: 35%;
+  right: 8px;
+  transform: rotate(-35deg);
+  opacity: 0.1;
+  animation: medFloat4 22s ease-in-out infinite reverse;
+}
+
+@keyframes medFloat1 {
+  0%, 100% { transform: rotate(15deg) translate(0, 0); }
+  25%      { transform: rotate(18deg) translate(8px, -12px); }
+  50%      { transform: rotate(12deg) translate(-4px, -20px); }
+  75%      { transform: rotate(17deg) translate(6px, -8px); }
+}
+
+@keyframes medFloat2 {
+  0%, 100% { transform: translateY(0) scaleX(1); }
+  50%      { transform: translateY(-15px) scaleX(1.02); }
+}
+
+@keyframes medFloat3 {
+  0%, 100% { transform: rotate(-10deg) translateY(0); }
+  33%      { transform: rotate(-6deg) translateY(-18px); }
+  66%      { transform: rotate(-14deg) translateY(-8px); }
+}
+
+@keyframes medFloat4 {
+  0%, 100% { transform: rotate(25deg) translate(0, 0); }
+  30%      { transform: rotate(20deg) translate(-6px, -14px); }
+  60%      { transform: rotate(28deg) translate(4px, -22px); }
+}
+
+@keyframes medFloat5 {
+  0%, 100% { transform: rotate(0deg) translate(0, 0); }
+  40%      { transform: rotate(5deg) translate(10px, -10px); }
+  80%      { transform: rotate(-3deg) translate(-5px, -16px); }
+}
+
+@keyframes medFloat6 {
+  0%, 100% { transform: rotate(-8deg) translate(0, 0); }
+  50%      { transform: rotate(-3deg) translate(-8px, -18px); }
+}
+
+/* ── Responsive Design ── */
+@media (max-width: 768px) {
+  .app-layout {
+    padding: 0 60px;
+  }
+
+  .left-sidebar,
+  .right-sidebar {
+    width: 60px;
+  }
+
+  .med-svg {
+    opacity: 0.08;
+    transform: scale(0.7);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-layout {
+    padding: 0 40px;
+  }
+
+  .left-sidebar,
+  .right-sidebar {
+    width: 40px;
+  }
+
+  .med-svg {
+    opacity: 0.06;
+    transform: scale(0.5);
+  }
+}

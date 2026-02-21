@@ -1,0 +1,167 @@
+<div class="search-page" [class.has-results]="searched && results.length > 0">
+  <div class="search-hero-icon" [class.compact]="searched && results.length > 0">
+    <svg viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- DNA strand 1 -->
+      <path d="M20 5 C45 15, 55 25, 40 35 C25 45, 15 55, 40 65 C65 75, 55 85, 40 95"
+            stroke="url(#dna-grad1)" stroke-width="3" stroke-linecap="round" fill="none">
+        <animate attributeName="d"
+          values="M20 5 C45 15, 55 25, 40 35 C25 45, 15 55, 40 65 C65 75, 55 85, 40 95;
+                  M20 5 C50 18, 60 22, 40 35 C20 48, 10 52, 40 65 C70 78, 55 88, 40 95;
+                  M20 5 C45 15, 55 25, 40 35 C25 45, 15 55, 40 65 C65 75, 55 85, 40 95"
+          dur="4s" repeatCount="indefinite"/>
+      </path>
+      <!-- DNA strand 2 -->
+      <path d="M60 5 C35 15, 25 25, 40 35 C55 45, 65 55, 40 65 C15 75, 25 85, 40 95"
+            stroke="url(#dna-grad2)" stroke-width="3" stroke-linecap="round" fill="none">
+        <animate attributeName="d"
+          values="M60 5 C35 15, 25 25, 40 35 C55 45, 65 55, 40 65 C15 75, 25 85, 40 95;
+                  M60 5 C30 18, 20 22, 40 35 C60 48, 70 52, 40 65 C10 78, 25 88, 40 95;
+                  M60 5 C35 15, 25 25, 40 35 C55 45, 65 55, 40 65 C15 75, 25 85, 40 95"
+          dur="4s" repeatCount="indefinite"/>
+      </path>
+      <!-- Rungs -->
+      <line x1="28" y1="20" x2="52" y2="20" stroke="var(--text-secondary)" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+      <line x1="32" y1="35" x2="48" y2="35" stroke="var(--text-secondary)" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+      <line x1="28" y1="50" x2="52" y2="50" stroke="var(--text-secondary)" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+      <line x1="32" y1="65" x2="48" y2="65" stroke="var(--text-secondary)" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+      <line x1="28" y1="80" x2="52" y2="80" stroke="var(--text-secondary)" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+      <!-- Base-pair dots -->
+      <circle cx="28" cy="20" r="2.5" fill="var(--icd10)" opacity="0.7"/>
+      <circle cx="52" cy="20" r="2.5" fill="var(--snomed)" opacity="0.7"/>
+      <circle cx="32" cy="35" r="2.5" fill="var(--hcc)" opacity="0.7"/>
+      <circle cx="48" cy="35" r="2.5" fill="var(--cpt)" opacity="0.7"/>
+      <circle cx="28" cy="50" r="2.5" fill="var(--hcpcs)" opacity="0.7"/>
+      <circle cx="52" cy="50" r="2.5" fill="var(--rxnorm)" opacity="0.7"/>
+      <circle cx="32" cy="65" r="2.5" fill="var(--snomed)" opacity="0.7"/>
+      <circle cx="48" cy="65" r="2.5" fill="var(--icd10)" opacity="0.7"/>
+      <circle cx="28" cy="80" r="2.5" fill="var(--cpt)" opacity="0.7"/>
+      <circle cx="52" cy="80" r="2.5" fill="var(--hcc)" opacity="0.7"/>
+      <defs>
+        <linearGradient id="dna-grad1" x1="0" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="var(--snomed)"/>
+          <stop offset="50%" stop-color="var(--icd10)"/>
+          <stop offset="100%" stop-color="var(--hcc)"/>
+        </linearGradient>
+        <linearGradient id="dna-grad2" x1="0" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="var(--icd10)"/>
+          <stop offset="50%" stop-color="var(--cpt)"/>
+          <stop offset="100%" stop-color="var(--snomed)"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+  <div class="search-controls" [class.compact]="searched && results.length > 0">
+    <div class="search-bar-wrapper" [class.compact]="searched && results.length > 0">
+      <div class="search-bar" [class.compact]="searched && results.length > 0">
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onInputChange()"
+          (keyup.enter)="onSearch()"
+          (keydown)="onKeyDown($event)"
+          (focus)="onSearchFocus()"
+          placeholder="Search by code or description..."
+          class="search-input"
+          [class.compact]="searched && results.length > 0"
+          autocomplete="off"
+        />
+        <button (click)="onSearch()" class="btn-search" [class.compact]="searched && results.length > 0" aria-label="Search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+      </div>
+
+      @if (showSuggestions && suggestions.length > 0) {
+        <div class="autocomplete-dropdown" [class.compact]="searched && results.length > 0">
+          @for (item of suggestions; track item.code; let i = $index) {
+            <div
+              class="autocomplete-item"
+              [class.active]="i === activeSuggestionIndex"
+              (mousedown)="selectSuggestion(item)"
+              (mouseenter)="activeSuggestionIndex = i">
+              <span class="badge ac-badge" [class]="getCodeTypeBadgeClass(item.code_type)">{{ item.code_type }}</span>
+              <span class="ac-code" [appTooltip]="item.code + ' – ' + item.description">{{ item.code }}</span>
+              <span class="ac-desc">{{ item.description }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="filter-bar">
+      <span class="filter-label">Filter:</span>
+      @for (ct of codeTypes; track ct.value) {
+        <button class="filter-pill"
+                [class.active]="selectedType === ct.value"
+                [attr.data-type]="ct.value"
+                (click)="selectedType = ct.value; onSearch()">
+          {{ ct.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading">Searching...</div>
+  }
+
+  @if (!loading && results.length > 0) {
+    <div class="results-info">
+      <span>Found {{ totalResults }} results</span>
+    </div>
+
+    <!-- Visual Mapping Graph -->
+    @if (graphNodes.length > 0) {
+      <div class="mapping-graph-panel">
+        <div class="graph-header">
+          <h2>Code Mapping &amp; Linkages</h2>
+          <span class="graph-subtitle">for {{ selectedGraphCode }}</span>
+        </div>
+
+        @if (graphLoading) {
+          <div class="loading">Loading graph...</div>
+        } @else {
+          <app-mapping-diagram
+            [nodes]="graphNodes"
+            [edges]="graphEdges"
+            [rootId]="graphRoot"
+            (nodeClick)="onGraphNodeClick($event)">
+          </app-mapping-diagram>
+        }
+      </div>
+    }
+
+    <div class="results-list">
+      @for (item of results; track item.code) {
+        <div class="result-card">
+          <a (click)="viewCode(item)" class="result-main">
+            <span class="badge" [class]="getCodeTypeBadgeClass(item.code_type)">{{ item.code_type }}</span>
+            <div class="result-info">
+              <span class="result-code" [appTooltip]="item.code + ' – ' + (item.description || item.short_description || '')">{{ item.code }}</span>
+              <span class="result-desc">{{ item.description || item.short_description }}</span>
+            </div>
+          </a>
+          <button class="btn-graph" (click)="showGraphForResult(item)" title="Show mappings graph">
+            &#x1F517;
+          </button>
+        </div>
+      }
+    </div>
+
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage <= 1" class="btn-page">Previous</button>
+        <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage >= totalPages" class="btn-page">Next</button>
+      </div>
+    }
+  }
+
+  @if (!loading && searched && results.length === 0) {
+    <div class="no-results">
+      <p>No results found for "{{ searchQuery }}"</p>
+      <p>Try a different search term or change the filter.</p>
+    </div>
+  }
+</div>

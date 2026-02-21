@@ -1,0 +1,223 @@
+:host { display: block; }
+
+/* ── wrapper ── */
+.diagram-wrapper {
+  margin-top: 0.5rem;
+}
+
+/* ── Zoom controls ── */
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.zoom-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  line-height: 1.4;
+
+  &:hover {
+    background: var(--hover-bg);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+}
+
+.zoom-fit {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.55rem;
+}
+
+.zoom-level {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 42px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.diagram-scroll {
+  overflow: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  max-height: 700px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+
+  &.grabbing {
+    cursor: grabbing;
+  }
+}
+
+.diagram-svg {
+  display: block;
+  transition: width 0.25s ease, height 0.25s ease;
+}
+
+/* ── column headers ── */
+.col-header {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.col-header[data-type="SNOMED"]    { fill: var(--snomed); }
+.col-header[data-type="RxNorm"]    { fill: var(--rxnorm); }
+.col-header[data-type="NDC"]       { fill: var(--ndc); }
+.col-header[data-type="ICD-10-CM"] { fill: var(--icd10); }
+.col-header[data-type="HCC"]       { fill: var(--hcc); }
+.col-header[data-type="CPT"]       { fill: var(--cpt); }
+.col-header[data-type="HCPCS"]     { fill: var(--hcpcs); }
+
+.col-line[data-type="SNOMED"]    { stroke: var(--snomed); }
+.col-line[data-type="RxNorm"]    { stroke: var(--rxnorm); }
+.col-line[data-type="NDC"]       { stroke: var(--ndc); }
+.col-line[data-type="ICD-10-CM"] { stroke: var(--icd10); }
+.col-line[data-type="HCC"]       { stroke: var(--hcc); }
+.col-line[data-type="CPT"]       { stroke: var(--cpt); }
+.col-line[data-type="HCPCS"]     { stroke: var(--hcpcs); }
+
+/* ── edges ── */
+.edge-path[data-rel="maps_to"]          { stroke: var(--icd10); }
+.edge-path[data-rel="risk_adjusts_to"]  { stroke: var(--hcc); }
+.edge-path[data-rel="cross_reference"]  { stroke: var(--rxnorm); }
+.edge-path[data-rel="standardized_as"]  { stroke: var(--ndc); }
+.edge-glow[data-rel="maps_to"]          { stroke: var(--icd10); }
+.edge-glow[data-rel="risk_adjusts_to"]  { stroke: var(--hcc); }
+.edge-glow[data-rel="cross_reference"]  { stroke: var(--rxnorm); }
+.edge-glow[data-rel="standardized_as"]  { stroke: var(--ndc); }
+
+.edge-path {
+  animation: dashflow 1.2s linear infinite;
+}
+
+.arrow-map     { fill: var(--icd10); }
+.arrow-risk    { fill: var(--hcc); }
+.arrow-cross   { fill: var(--rxnorm); }
+.arrow-standard { fill: var(--ndc); }
+
+/* ── nodes ── */
+.node-group { cursor: pointer; }
+
+.node-rect {
+  fill: var(--surface);
+  stroke-width: 1.5;
+  transition: fill 0.25s, stroke-width 0.15s;
+}
+.node-rect.root {
+  fill: var(--hover-bg, #e8f0fe);
+  stroke-width: 2.5;
+}
+
+.node-rect[data-type="SNOMED"]    { stroke: var(--snomed); }
+.node-rect[data-type="RxNorm"]    { stroke: var(--rxnorm); }
+.node-rect[data-type="NDC"]       { stroke: var(--ndc); }
+.node-rect[data-type="ICD-10-CM"] { stroke: var(--icd10); }
+.node-rect[data-type="HCC"]       { stroke: var(--hcc); }
+.node-rect[data-type="CPT"]       { stroke: var(--cpt); }
+.node-rect[data-type="HCPCS"]     { stroke: var(--hcpcs); }
+
+.node-group:hover .node-rect {
+  stroke-width: 2.5;
+  filter: url(#node-shadow) brightness(0.96);
+}
+
+.node-accent[data-type="SNOMED"]    { fill: var(--snomed); }
+.node-accent[data-type="RxNorm"]    { fill: var(--rxnorm); }
+.node-accent[data-type="NDC"]       { fill: var(--ndc); }
+.node-accent[data-type="ICD-10-CM"] { fill: var(--icd10); }
+.node-accent[data-type="HCC"]       { fill: var(--hcc); }
+.node-accent[data-type="CPT"]       { fill: var(--cpt); }
+.node-accent[data-type="HCPCS"]     { fill: var(--hcpcs); }
+
+.node-code {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+.node-code[data-type="SNOMED"]    { fill: var(--snomed); }
+.node-code[data-type="RxNorm"]    { fill: var(--rxnorm); }
+.node-code[data-type="NDC"]       { fill: var(--ndc); }
+.node-code[data-type="ICD-10-CM"] { fill: var(--icd10); }
+.node-code[data-type="HCC"]       { fill: var(--hcc); }
+.node-code[data-type="CPT"]       { fill: var(--cpt); }
+.node-code[data-type="HCPCS"]     { fill: var(--hcpcs); }
+
+.node-label {
+  font-size: 11px;
+  fill: var(--text-secondary);
+}
+
+.root-dot {
+  opacity: 0.7;
+  animation: pulse 2s ease-in-out infinite;
+}
+.root-dot[data-type="SNOMED"]    { fill: var(--snomed); }
+.root-dot[data-type="RxNorm"]    { fill: var(--rxnorm); }
+.root-dot[data-type="NDC"]       { fill: var(--ndc); }
+.root-dot[data-type="ICD-10-CM"] { fill: var(--icd10); }
+.root-dot[data-type="HCC"]       { fill: var(--hcc); }
+.root-dot[data-type="CPT"]       { fill: var(--cpt); }
+.root-dot[data-type="HCPCS"]     { fill: var(--hcpcs); }
+
+/* ── legend ── */
+.diagram-legend {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+}
+.map-line      { background: var(--icd10); }
+.risk-line     { background: var(--hcc); }
+.cross-line    { background: var(--rxnorm); }
+.standard-line { background: var(--ndc); }
+
+.legend-hint {
+  margin-left: auto;
+  font-style: italic;
+  opacity: 0.65;
+}
+
+.legend-count {
+  font-weight: 600;
+}
+
+/* ── animations ── */
+@keyframes dashflow {
+  from { stroke-dashoffset: 20; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; r: 4; }
+  50%      { opacity: 1;   r: 6; }
+}

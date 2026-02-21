@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv
+
+# Angular / Node
+node_modules/
+.angular/
+dist/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+build/
+
+# Data files (staging and generated)
+backend/data/staging/
+backend/data/archive/
+frontend/public/data/*.json
+frontend/public/data/*/list/*.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Compressed archives
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tar.bz2
+
+# Large files
+*.iso
+*.dmg
+*.exe
+*.msi
+
+# Asset files (typically large)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.wav
+*.flac
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# EXCEPT: Allow compressed frontend database for GitHub Pages deployment
+!frontend/public/data/coding_database.sqlite.gz
+
+# IDE and OS
+instructions.md
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+*.code-workspace

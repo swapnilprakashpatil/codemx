@@ -1,0 +1,137 @@
+@if (columns.length > 0) {
+  <div class="diagram-wrapper">
+    <div class="zoom-controls">
+      <button class="zoom-btn" (click)="zoomIn()" title="Zoom in">+</button>
+      <span class="zoom-level">{{ Math.round(zoomLevel * 100) }}%</span>
+      <button class="zoom-btn" (click)="zoomOut()" title="Zoom out">&minus;</button>
+      <button class="zoom-btn zoom-fit" (click)="zoomToFit()" title="Fit to view">Fit</button>
+      <button class="zoom-btn" (click)="zoomReset()" title="Reset zoom">100%</button>
+    </div>
+    <div class="diagram-scroll" #diagramScroll
+         [class.grabbing]="isDragging"
+         (wheel)="onWheel($event)"
+         (pointerdown)="onPointerDown($event)"
+         (pointermove)="onPointerMove($event)"
+         (pointerup)="onPointerUp($event)"
+         (pointercancel)="onPointerUp($event)">
+      <svg [attr.viewBox]="'0 0 ' + svgWidth + ' ' + svgHeight"
+           [style.width.px]="svgWidth * zoomLevel"
+           [style.height.px]="svgHeight * zoomLevel"
+           preserveAspectRatio="xMidYMid meet"
+           class="diagram-svg">
+        <defs>
+          <marker id="arrow-map" markerWidth="10" markerHeight="7"
+                  refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M 0 0.5 L 9 3.5 L 0 6.5" class="arrow-map"/>
+          </marker>
+          <marker id="arrow-risk" markerWidth="10" markerHeight="7"
+                  refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M 0 0.5 L 9 3.5 L 0 6.5" class="arrow-risk"/>
+          </marker>
+          <marker id="arrow-cross" markerWidth="10" markerHeight="7"
+                  refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M 0 0.5 L 9 3.5 L 0 6.5" class="arrow-cross"/>
+          </marker>
+          <marker id="arrow-standard" markerWidth="10" markerHeight="7"
+                  refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M 0 0.5 L 9 3.5 L 0 6.5" class="arrow-standard"/>
+          </marker>
+          <filter id="node-shadow" x="-4%" y="-4%" width="108%" height="112%">
+            <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.10"/>
+          </filter>
+        </defs>
+
+        <!-- Column headers + underlines -->
+        @for (col of columns; track col.type) {
+          <text [attr.x]="col.headerX" y="26"
+                text-anchor="middle"
+                class="col-header" [attr.data-type]="col.type">
+            {{ col.type }}
+          </text>
+          @if (col.nodes.length) {
+            <line [attr.x1]="col.nodes[0].x"
+                  y1="36"
+                  [attr.x2]="col.nodes[0].x + nodeW"
+                  y2="36"
+                  class="col-line" [attr.data-type]="col.type"
+                  stroke-width="2.5" stroke-linecap="round"/>
+          }
+        }
+
+        <!-- Edge paths (animated dashes) -->
+        @for (path of paths; track $index) {
+          <!-- glow shadow -->
+          <path [attr.d]="path.d" fill="none"
+                [attr.data-rel]="path.relationship"
+                stroke-width="4" opacity="0.08" class="edge-glow"/>
+          <!-- main line -->
+          <path [attr.d]="path.d" fill="none"
+                [attr.data-rel]="path.relationship"
+                stroke-width="2"
+                stroke-dasharray="6 4"
+                [attr.marker-end]="path.markerUrl"
+                class="edge-path"/>
+        }
+
+        <!-- Nodes -->
+        @for (col of columns; track col.type) {
+          @for (node of col.nodes; track node.id) {
+            <g class="node-group" (click)="onNodeClick(node)"
+               [appTooltip]="node.code + ' \u2013 ' + node.label">
+              <!-- bg rect -->
+              <rect [attr.x]="node.x" [attr.y]="node.y"
+                    [attr.width]="nodeW" [attr.height]="nodeH"
+                    rx="10"
+                    class="node-rect"
+                    [class.root]="node.isRoot"
+                    [attr.data-type]="node.type"
+                    filter="url(#node-shadow)"/>
+              <!-- left accent -->
+              <rect [attr.x]="node.x" [attr.y]="node.y + 6"
+                    width="4" [attr.height]="nodeH - 12"
+                    rx="2"
+                    class="node-accent" [attr.data-type]="node.type"/>
+              <!-- code -->
+              <text [attr.x]="node.x + 16" [attr.y]="node.y + 23"
+                    class="node-code" [attr.data-type]="node.type">
+                {{ node.code }}
+              </text>
+              <!-- label -->
+              <text [attr.x]="node.x + 16" [attr.y]="node.y + 42"
+                    class="node-label">
+                {{ truncate(node.label, 22) }}
+              </text>
+              <!-- root indicator -->
+              @if (node.isRoot) {
+                <circle [attr.cx]="node.x + nodeW - 16" [attr.cy]="node.y + 14"
+                        r="5" class="root-dot" [attr.data-type]="node.type"/>
+              }
+            </g>
+          }
+        }
+      </svg>
+    </div>
+
+    <!-- Legend -->
+    <div class="diagram-legend">
+      <div class="legend-item">
+        <span class="legend-line map-line"></span>
+        <span>maps to</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-line risk-line"></span>
+        <span>risk adjusts to</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-line cross-line"></span>
+        <span>cross reference</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-line standard-line"></span>
+        <span>standardized as</span>
+      </div>
+      <span class="legend-hint">Ctrl+Scroll to zoom · Drag to pan</span>
+      <span class="legend-count">{{ nodes.length }} codes &middot; {{ edges.length }} linkages</span>
+    </div>
+  </div>
+}
